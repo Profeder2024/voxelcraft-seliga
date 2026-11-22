@@ -1,4 +1,4 @@
-html_code = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -1117,6 +1117,8 @@ function renderHotbar() {
       <span style="font-size:9px; color:#e2e8f0; font-weight:600;">${info.name.slice(0, 8)}</span>
       <span class="slot-count">${gameState.mode === "creative" ? "∞" : slot.count}</span>
     `;
+    div.style.cursor = "pointer";
+    div.onclick = () => { gameState.selectedSlot = idx; renderHotbar(); };
     hb.appendChild(div);
   });
 }
@@ -1261,16 +1263,26 @@ function getTargetRay() {
   const dirY = Math.sin(p.pitch);
   const dirZ = Math.cos(p.yaw) * Math.cos(p.pitch);
 
-  let prev = null;
-  for (let d = 0.5; d <= 5.5; d += 0.2) {
+  let prev = {
+    x: Math.round(p.x + dirX * 1.4),
+    y: Math.round(p.y + 1.4 + dirY * 1.4),
+    z: Math.round(p.z + dirZ * 1.4)
+  };
+  for (let d = 0.8; d <= 7.5; d += 0.1) {
     const rx = Math.round(p.x + dirX * d);
     const ry = Math.round(p.y + 1.55 + dirY * d);
     const rz = Math.round(p.z + dirZ * d);
     const blk = getBlock(rx, ry, rz);
     if (blk) return { hit: { x: rx, y: ry, z: rz, type: blk }, place: prev };
-    prev = { x: rx, y: ry, z: rz };
+    if (rx !== prev.x || ry !== prev.y || rz !== prev.z) {
+      prev = { x: rx, y: ry, z: rz };
+    }
   }
-  return null;
+  // Se mirar no horizonte sem acertar bloco, permite construir 3 blocos à frente na altura do olhar/chão
+  const fx = Math.round(p.x + dirX * 3.0);
+  const fy = Math.max(1, Math.round(p.y + 1.2 + dirY * 3.0));
+  const fz = Math.round(p.z + dirZ * 3.0);
+  return { hit: null, place: { x: fx, y: fy, z: fz } };
 }
 
 function registerBlockPlacement(x, y, z, type) {
@@ -1329,17 +1341,31 @@ function handleLeftClick() {
 }
 
 function handleRightClick() {
-  const slot = gameState.hotbar[gameState.selectedSlot];
-  if (!slot || BLOCK_TYPES[slot.type]?.tool) return;
-  if (gameState.mode === "survival" && slot.count <= 0) return;
+  let slot = gameState.hotbar[gameState.selectedSlot];
+  // Se estiver segurando ferramenta (Picareta/Espada) ao apertar Q, troca automaticamente para o primeiro bloco disponível!
+  if (!slot || BLOCK_TYPES[slot.type]?.tool) {
+    const blockSlotIdx = gameState.hotbar.findIndex(s => !BLOCK_TYPES[s.type]?.tool && (gameState.mode === "creative" || s.count > 0));
+    if (blockSlotIdx === -1) {
+      addChat("Sem blocos na hotbar! Minere ou abra o Crafting (E).");
+      return;
+    }
+    gameState.selectedSlot = blockSlotIdx;
+    slot = gameState.hotbar[blockSlotIdx];
+    renderHotbar();
+  }
+  if (gameState.mode === "survival" && slot.count <= 0) {
+    addChat("Este bloco acabou! Selecione outro slot (3 a 9) ou use a roda do mouse.");
+    return;
+  }
 
   const ray = getTargetRay();
   if (ray && ray.place) {
-    gameState.swingAnim = 1.0;
     const { x, y, z } = ray.place;
+    if (getBlock(x, y, z)) return;
+    gameState.swingAnim = 1.0;
     const p = gameState.player;
     const dx = Math.abs(x - p.x), dz = Math.abs(z - p.z);
-    if (dx < 0.75 && dz < 0.75 && y === Math.floor(p.y)) {
+    if (dx < 0.75 && dz < 0.75 && (y === Math.floor(p.y) || y === Math.round(p.y))) {
       p.y = y + 0.55;
     }
     setBlock(x, y, z, slot.type, true);
@@ -1424,6 +1450,12 @@ canvas.addEventListener("mousedown", (e) => {
   if (e.button === 2) handleRightClick();
 });
 window.addEventListener("contextmenu", e => e.preventDefault());
+window.addEventListener("wheel", (e) => {
+  if (!gameState.started || invOpen || consoleOpen) return;
+  const dir = e.deltaY > 0 ? 1 : -1;
+  gameState.selectedSlot = (gameState.selectedSlot + dir + gameState.hotbar.length) % gameState.hotbar.length;
+  renderHotbar();
+});
 
 // ============================================================================
 // 10. RENDERIZAÇÃO 3D TEXTURIZADA EM PERSPECTIVA + AVATARES DOS COLEGAS
@@ -1435,7 +1467,7 @@ function projectPoint(wx, wy, wz) {
   const dy = wy - (p.y + 1.62 + bobY);
   const dz = wz - p.z;
 
-  const cy = Math.cos(-p.yaw), sy = Math.sin(-p.yaw);
+  const cy = Math.cos(p.yaw), sy = Math.sin(p.yaw);
   const rx = dx * cy - dz * sy;
   const rz1 = dx * sy + dz * cy;
 
@@ -2044,9 +2076,4 @@ function exportGradesCSV() {
 }
 </script>
 </body>
-</html>'''
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html_code)
-
-print("Gerado com sucesso:", len(html_code), "bytes")
+</html>
