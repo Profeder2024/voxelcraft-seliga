@@ -257,7 +257,7 @@
 
   <!-- F3 Debug -->
   <div id="f3-panel">
-    VoxelEngine Studio 1.0 (3D Isometric/Projected)<br>
+    VoxelEngine Studio 1.0 (3D Perspective)<br>
     XYZ: <span id="f3-xyz">0, 0, 0</span> | Zona: <span id="f3-zone">Centro</span><br>
     Modo: <span id="f3-mode">Survival</span> | Hora: <span id="f3-time">Dia</span><br>
     Sync Firebase: <span id="f3-sync">Aguardando...</span>
@@ -355,12 +355,16 @@ let auth = null;
 let firebaseReady = false;
 
 try {
-  firebase.initializeApp(firebaseConfig);
-  auth = firebase.auth();
-  db = firebase.firestore();
-  firebaseReady = true;
-  document.getElementById("auth-status").textContent = "Firebase Conectado (seliga-voxelcraft)! Pronto para login @escola.";
-  document.getElementById("auth-status").classList.add("status-ok");
+  if (typeof firebase !== "undefined") {
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    firebaseReady = true;
+    document.getElementById("auth-status").textContent = "Firebase Conectado (seliga-voxelcraft)! Pronto para login @escola.";
+    document.getElementById("auth-status").classList.add("status-ok");
+  } else {
+    document.getElementById("auth-status").textContent = "Modo Offline/Local (SDK Firebase não carregou).";
+  }
 } catch (e) {
   console.warn("Firebase em modo local:", e);
   document.getElementById("auth-status").textContent = "Modo Local (Verifique sua conexão com a internet).";
@@ -531,9 +535,11 @@ async function syncToFirebase(manual = false) {
     updatedAt: new Date().toISOString()
   };
 
-  const localRecords = JSON.parse(localStorage.getItem("seliga_records") || "{}");
-  localRecords[gameState.studentEmail] = payload;
-  localStorage.setItem("seliga_records", JSON.stringify(localRecords));
+  try {
+    const localRecords = JSON.parse(localStorage.getItem("seliga_records") || "{}");
+    localRecords[gameState.studentEmail] = payload;
+    localStorage.setItem("seliga_records", JSON.stringify(localRecords));
+  } catch (err) {}
 
   if (firebaseReady && db) {
     try {
@@ -696,7 +702,9 @@ function startGame() {
   gameState.started = true;
 
   addChat("Bem-vindo(a), " + name + "! Use /fill, /tp ou /give para ganhar pontos de programação!");
-  canvas.requestPointerLock?.();
+  try {
+    canvas.requestPointerLock?.();
+  } catch (err) {}
   requestAnimationFrame(gameLoop);
 }
 
@@ -780,10 +788,10 @@ function toggleInventory(force) {
   const modal = document.getElementById("inv-modal");
   if (invOpen) {
     modal.classList.remove("hidden");
-    document.exitPointerLock?.();
+    try { document.exitPointerLock?.(); } catch (e) {}
   } else {
     modal.classList.add("hidden");
-    canvas.requestPointerLock?.();
+    try { canvas.requestPointerLock?.(); } catch (e) {}
   }
 }
 
@@ -970,7 +978,7 @@ window.addEventListener("keydown", (e) => {
       inp.value = "";
       consoleOpen = false;
       document.getElementById("console-box").classList.add("hidden");
-      canvas.requestPointerLock?.();
+      try { canvas.requestPointerLock?.(); } catch (err) {}
     } else if (e.key === "Escape") {
       consoleOpen = false;
       document.getElementById("console-box").classList.add("hidden");
@@ -982,7 +990,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     consoleOpen = true;
     document.getElementById("console-box").classList.remove("hidden");
-    document.exitPointerLock?.();
+    try { document.exitPointerLock?.(); } catch (err) {}
     const inp = document.getElementById("console-input");
     inp.value = e.key === "/" ? "/" : "";
     inp.focus();
@@ -1021,7 +1029,7 @@ window.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mousedown", (e) => {
   if (!gameState.started || invOpen || consoleOpen) return;
   if (document.pointerLockElement !== canvas) {
-    canvas.requestPointerLock?.();
+    try { canvas.requestPointerLock?.(); } catch (err) {}
     return;
   }
   if (e.button === 0) handleLeftClick();
@@ -1035,7 +1043,7 @@ window.addEventListener("contextmenu", e => e.preventDefault());
 function projectPoint(wx, wy, wz) {
   const p = gameState.player;
   const dx = wx - p.x;
-  const dy = wy - (p.y + 1.62); // Altura dos olhos do jogador
+  const dy = wy - (p.y + 1.62);
   const dz = wz - p.z;
 
   const cy = Math.cos(-p.yaw), sy = Math.sin(-p.yaw);
@@ -1076,14 +1084,12 @@ function drawVoxelCube(bx, by, bz, type, isTarget) {
   const p = gameState.player;
   const info = BLOCK_TYPES[type] || BLOCK_TYPES.stone;
 
-  // Vértices exatos de um cubo unitário [bx-0.5, bx+0.5] x [by-0.5, by+0.5] x [bz-0.5, bz+0.5]
   const x0 = bx - 0.5, x1 = bx + 0.5;
   const y0 = by - 0.5, y1 = by + 0.5;
   const z0 = bz - 0.5, z1 = bz + 0.5;
 
   const stroke = isTarget ? "#ffffff" : "rgba(0,0,0,0.28)";
 
-  // 1. Face Superior (Topo) — visível se o olho está acima de y1 e não há bloco imediatamente acima
   if ((p.y + 1.62) > y1 && !getBlock(bx, by + 1, bz)) {
     const p00 = projectPoint(x0, y1, z0);
     const p10 = projectPoint(x1, y1, z0);
@@ -1092,7 +1098,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget) {
     drawQuad([p00, p10, p11, p01], info.top, stroke);
   }
 
-  // 2. Face Norte (-Z)
   if (p.z < z0 && !getBlock(bx, by, bz - 1)) {
     const p00 = projectPoint(x0, y0, z0);
     const p10 = projectPoint(x1, y0, z0);
@@ -1101,7 +1106,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget) {
     drawQuad([p00, p10, p11, p01], info.color, stroke);
   }
 
-  // 3. Face Sul (+Z)
   if (p.z > z1 && !getBlock(bx, by, bz + 1)) {
     const p00 = projectPoint(x0, y0, z1);
     const p10 = projectPoint(x1, y0, z1);
@@ -1110,7 +1114,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget) {
     drawQuad([p00, p10, p11, p01], info.color, stroke);
   }
 
-  // 4. Face Oeste (-X)
   if (p.x < x0 && !getBlock(bx - 1, by, bz)) {
     const p00 = projectPoint(x0, y0, z0);
     const p01 = projectPoint(x0, y0, z1);
@@ -1119,7 +1122,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget) {
     drawQuad([p00, p01, p11, p10], info.side, stroke);
   }
 
-  // 5. Face Leste (+X)
   if (p.x > x1 && !getBlock(bx + 1, by, bz)) {
     const p00 = projectPoint(x1, y0, z0);
     const p01 = projectPoint(x1, y0, z1);
@@ -1208,7 +1210,6 @@ function renderScene() {
 
   for (const [key, type] of Object.entries(gameState.worldBlocks)) {
     const [bx, by, bz] = key.split(",").map(Number);
-    // Oculta blocos totalmente enterrados para manter 60 FPS
     if (
       getBlock(bx, by + 1, bz) &&
       getBlock(bx, by - 1, bz) &&
@@ -1254,7 +1255,6 @@ function renderScene() {
     }
   });
 
-  // Painter's Algorithm: desenha do mais distante para o mais próximo
   renderList.sort((a, b) => b.dist - a.dist);
 
   for (const item of renderList) {
@@ -1293,7 +1293,6 @@ function renderScene() {
     }
   }
 
-  // Mão do jogador no canto inferior direito
   const slot = gameState.hotbar[gameState.selectedSlot];
   if (slot) {
     const info = BLOCK_TYPES[slot.type];
@@ -1337,7 +1336,11 @@ async function loadTeacherRecords() {
   const tbody = document.getElementById("teacher-table-body");
   tbody.innerHTML = "<tr><td colspan='8'>Carregando registros...</td></tr>";
 
-  const map = JSON.parse(localStorage.getItem("seliga_records") || "{}");
+  let map = {};
+  try {
+    map = JSON.parse(localStorage.getItem("seliga_records") || "{}");
+  } catch (e) {}
+
   if (firebaseReady && db) {
     try {
       const snap = await db.collection("avaliacoes_seliga").get();
@@ -1375,8 +1378,7 @@ function exportGradesCSV() {
     alert("Não há notas registradas para exportar.");
     return;
   }
-  const header = "Aluno;Email_Escola;Turma;Cidadania_ECA_3.0;Crafting_2.5;Comandos_Codigo_2.5;Defesa_Engajamento_2.0;Nota_Final_10.0;Atualizado_Em
-";
+  const header = "Aluno;Email_Escola;Turma;Cidadania_ECA_3.0;Crafting_2.5;Comandos_Codigo_2.5;Defesa_Engajamento_2.0;Nota_Final_10.0;Atualizado_Em\n";
   const rows = cachedRecords.map(r => [
     r.name,
     r.email,
@@ -1387,10 +1389,9 @@ function exportGradesCSV() {
     String(r.ax4 || 0).replace(".", ","),
     String(r.totalGrade || 0).replace(".", ","),
     r.updatedAt || ""
-  ].join(";")).join("
-");
+  ].join(";")).join("\n");
 
-  const blob = new Blob(["﻿" + header + rows], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "notas_seliga_voxelengine.csv";
