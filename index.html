@@ -3,279 +3,896 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoxelCraft Studio — Multiplayer Equipes, ECA & Avaliação Se Liga</title>
+<title>VoxelCraft Studio — Plataforma Educacional Multiplayer, ECA & Avaliação Se Liga</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Inter', 'Segoe UI', sans-serif; }
-  body, html { width: 100%; height: 100%; overflow: hidden; background: #0b0f17; color: #fff; }
-  canvas { display: block; width: 100%; height: 100%; }
-
-  /* Telas Overlay */
-  .overlay {
-    position: fixed; inset: 0;
-    background: radial-gradient(circle at center, rgba(18, 28, 45, 0.88), rgba(8, 12, 20, 0.97));
-    backdrop-filter: blur(8px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 100; padding: 20px; overflow-y: auto;
+  :root {
+    --bg-dark: #070b14;
+    --bg-panel: rgba(15, 23, 42, 0.88);
+    --bg-card: linear-gradient(160deg, #131c31 0%, #0b1120 100%);
+    --border-subtle: rgba(148, 163, 184, 0.18);
+    --border-accent: rgba(56, 189, 248, 0.45);
+    --accent-cyan: #38bdf8;
+    --accent-teal: #2dd4bf;
+    --accent-gold: #fbbf24;
+    --accent-emerald: #10b981;
+    --accent-rose: #f43f5e;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
   }
-  .hidden { display: none !important; }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-dark);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ==========================================================================
+     TELAS SOBREPOSTAS (OVERLAYS & MODAIS)
+     ========================================================================== */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.14), transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(45, 212, 191, 0.12), transparent 45%),
+      rgba(6, 10, 19, 0.94);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .hidden {
+    display: none !important;
+  }
 
   .card {
-    background: linear-gradient(145deg, #1b2434, #131a26);
-    border: 2px solid #3c4d6b;
-    border-radius: 14px;
-    padding: 26px; max-width: 840px; width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.08);
+    background: var(--bg-card);
+    border: 1px solid var(--border-accent);
+    border-radius: 18px;
+    padding: 28px 32px;
+    max-width: 900px;
+    width: 100%;
+    box-shadow:
+      0 25px 70px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .brand-header {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: var(--accent-cyan);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
   .pixel-title {
     font-family: 'Press Start 2P', monospace;
-    font-size: 20px; line-height: 1.4;
-    color: #5ce1e6;
-    text-shadow: 0 3px 0 #0d3b4c, 0 0 20px rgba(92, 225, 230, 0.4);
-    margin-bottom: 8px; text-align: center;
+    font-size: 22px;
+    line-height: 1.4;
+    background: linear-gradient(180deg, #ffffff 0%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 12px rgba(56, 189, 248, 0.3));
+    margin-bottom: 8px;
   }
-  .subtitle { font-size: 13px; color: #b0c2de; text-align: center; margin-bottom: 20px; }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  @media (max-width: 650px) { .grid-2 { grid-template-columns: 1fr; } }
+  .subtitle {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    max-width: 640px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  @media (max-width: 720px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+  }
 
   .box {
-    background: rgba(11, 16, 25, 0.8); border: 1px solid #2e3d56; border-radius: 10px; padding: 16px;
+    background: rgba(9, 14, 26, 0.78);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
-  .box h3 { font-size: 13px; color: #ffd166; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; }
 
-  label { display: block; font-size: 12px; color: #b8c7dc; margin-bottom: 4px; margin-top: 10px; font-weight: 600; }
+  .box-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 8px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+    margin-top: 11px;
+    font-weight: 600;
+  }
+
   input, select {
-    width: 100%; padding: 10px 12px; border-radius: 7px; border: 1px solid #3e4f6b;
-    background: #0c111a; color: #fff; font-size: 14px; outline: none; transition: 0.2s;
+    width: 100%;
+    padding: 10px 13px;
+    border-radius: 9px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(15, 23, 42, 0.9);
+    color: #fff;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  input:focus, select:focus { border-color: #5ce1e6; box-shadow: 0 0 0 3px rgba(92, 225, 230, 0.15); }
 
+  input::placeholder {
+    color: #64748b;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  }
+
+  /* ==========================================================================
+     BOTÕES PROFISSIONAIS
+     ========================================================================== */
   .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 12px 18px; border: none; border-radius: 8px; font-weight: 800;
-    font-size: 14px; cursor: pointer; transition: 0.15s; width: 100%; margin-top: 10px;
-    text-transform: uppercase; letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 9px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    width: 100%;
+    margin-top: 10px;
+    letter-spacing: 0.3px;
   }
-  .btn:active { transform: translateY(1px); }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
   .btn-primary {
-    background: linear-gradient(180deg, #3be0d0, #239b8e);
-    color: #041f1c; box-shadow: 0 4px 0 #146158;
+    background: linear-gradient(135deg, #2dd4bf 0%, #0284c7 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 14px 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
-  .btn-primary:hover { filter: brightness(1.08); }
-  .btn-google { background: #ffffff; color: #1f2937; box-shadow: 0 3px 0 #cbd5e1; }
-  .btn-google:hover { background: #f1f5f9; }
-  .btn-secondary { background: #33415c; color: #fff; box-shadow: 0 3px 0 #1e293b; }
-  .btn-secondary:hover { background: #435578; }
-  .btn-warn { background: #f4a261; color: #1d1208; box-shadow: 0 3px 0 #b45309; }
-  .btn-warn:hover { background: #f7b279; }
+
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 10px 28px rgba(45, 212, 191, 0.45);
+  }
+
+  .btn-google {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-google:hover {
+    background: #f8fafc;
+  }
+
+  .btn-secondary {
+    background: rgba(51, 65, 85, 0.75);
+    color: #f1f5f9;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(71, 85, 105, 0.9);
+  }
+
+  .btn-teacher {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.28);
+  }
+
+  .btn-teacher:hover {
+    filter: brightness(1.07);
+  }
+
+  .btn-danger {
+    background: rgba(244, 63, 94, 0.16);
+    color: #fda4af;
+    border: 1px solid rgba(244, 63, 94, 0.35);
+  }
+
+  .btn-danger:hover {
+    background: rgba(244, 63, 94, 0.26);
+  }
+
+  .btn-sm {
+    width: auto;
+    margin: 0;
+    padding: 7px 13px;
+    font-size: 12px;
+  }
 
   .status-pill {
-    display: inline-block; padding: 5px 11px; border-radius: 20px; font-size: 11px;
-    font-weight: 700; background: #263247; color: #8ecae6; margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: rgba(30, 41, 59, 0.85);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    margin-top: 8px;
   }
-  .status-ok { background: #143d2b; color: #6ee7b7; border: 1px solid #10b981; }
-  .status-err { background: #591818; color: #fda4af; border: 1px solid #f43f5e; }
 
-  /* HUD do Jogo Estilo Minecraft Shaders */
-  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  .status-ok {
+    background: rgba(16, 185, 129, 0.14);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.35);
+  }
+
+  .status-err {
+    background: rgba(244, 63, 94, 0.14);
+    color: #fda4af;
+    border-color: rgba(244, 63, 94, 0.35);
+  }
+
+  /* ==========================================================================
+     HUD IN-GAME ESTILO MINECRAFT SHADERS HD
+     ========================================================================== */
+  #hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+
   #crosshair {
-    position: fixed; top: 50%; left: 50%; width: 20px; height: 20px;
-    transform: translate(-50%, -50%); pointer-events: none; mix-blend-mode: difference;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    mix-blend-mode: difference;
+    transition: transform 0.1s ease;
   }
+
   #crosshair::before, #crosshair::after {
-    content: ''; position: absolute; background: #ffffff;
+    content: '';
+    position: absolute;
+    background: #ffffff;
+    border-radius: 1px;
   }
-  #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
-  #crosshair::after { left: 9px; top: 0; width: 2px; height: 20px; }
 
-  /* Painel de Nota e Missão ao Vivo */
+  #crosshair::before { top: 10px; left: 2px; width: 18px; height: 2px; }
+  #crosshair::after  { left: 10px; top: 2px; width: 2px; height: 18px; }
+  #crosshair.target-active { transform: translate(-50%, -50%) scale(1.22); }
+
+  /* Painel Superior Esquerdo: Nota e Avaliação */
   #grade-hud {
-    position: fixed; top: 14px; left: 14px;
-    background: rgba(12, 17, 26, 0.84); backdrop-filter: blur(6px);
-    border: 2px solid rgba(92, 225, 230, 0.35); border-radius: 10px;
-    padding: 12px 14px; width: 285px; pointer-events: auto;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  }
-  .grade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .grade-title { font-size: 11px; font-weight: 800; color: #5ce1e6; text-transform: uppercase; letter-spacing: 0.6px; }
-  .grade-score { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #ffd166; text-shadow: 0 2px 0 #000; }
-  .axis-row { margin-top: 6px; font-size: 11px; }
-  .axis-label { display: flex; justify-content: space-between; color: #e2e8f0; margin-bottom: 3px; font-weight: 600; }
-  .bar-bg { width: 100%; height: 7px; background: #1e293b; border-radius: 4px; overflow: hidden; border: 1px solid #334155; }
-  .bar-fill { height: 100%; background: linear-gradient(90deg, #2ec4b6, #5ce1e6); width: 0%; transition: width 0.3s; }
-
-  /* Hotbar Minecraft Clássica */
-  #bottom-hud {
-    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-  }
-  .bars-row {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 492px; font-size: 13px; text-shadow: 1px 2px 0 #000;
-  }
-  #hotbar {
-    display: flex; gap: 4px;
-    background: rgba(20, 20, 24, 0.9);
-    padding: 5px; border-radius: 6px;
-    border: 3px solid #555b66;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 0 0 2px #1c1e24;
-  }
-  .slot {
-    width: 50px; height: 50px;
-    background: #2b2f38;
-    border: 2px solid #181a20;
-    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.12), inset -2px -2px 0 rgba(0,0,0,0.45);
-    border-radius: 4px; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; position: relative; font-size: 10px; text-align: center;
-    transition: transform 0.1s;
-  }
-  .slot.active {
-    border: 3px solid #ffffff;
-    background: #3d4452;
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 6px 15px rgba(255,255,255,0.25);
-  }
-  .slot-key { position: absolute; top: 2px; left: 4px; font-size: 9px; color: #94a3b8; font-weight: bold; }
-  .slot-icon { font-size: 19px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6)); }
-  .slot-count {
-    position: absolute; bottom: 1px; right: 4px; font-size: 11px;
-    font-weight: 800; color: #fff; text-shadow: 1px 1px 0 #000;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-accent);
+    border-radius: 14px;
+    padding: 14px 16px;
+    width: 295px;
+    pointer-events: auto;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   }
 
-  /* Direitos ECA & Equipe Online (Canto Superior Direito) */
+  .grade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .grade-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+  }
+
+  .grade-score {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--accent-gold);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .hud-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 8px 0 10px 0;
+  }
+
+  .hud-chip-btn {
+    padding: 6px 8px;
+    border-radius: 7px;
+    border: 1px solid rgba(251, 191, 36, 0.38);
+    background: rgba(251, 191, 36, 0.12);
+    color: #fde68a;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.15s;
+    text-align: center;
+  }
+
+  .hud-chip-btn:hover {
+    background: rgba(251, 191, 36, 0.24);
+  }
+
+  .hud-chip-btn.secondary {
+    border-color: rgba(148, 163, 184, 0.3);
+    background: rgba(51, 65, 85, 0.45);
+    color: #e2e8f0;
+  }
+
+  .hud-chip-btn.secondary:hover {
+    background: rgba(71, 85, 105, 0.7);
+  }
+
+  .axis-row { margin-top: 7px; font-size: 11px; }
+  .axis-label {
+    display: flex;
+    justify-content: space-between;
+    color: #e2e8f0;
+    margin-bottom: 3px;
+    font-weight: 600;
+  }
+
+  .bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(30, 41, 59, 0.9);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2dd4bf, #38bdf8);
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Painel Superior Direito: Direitos ECA & Equipe */
   #eca-hud {
-    position: fixed; top: 14px; right: 14px;
-    background: rgba(12, 17, 26, 0.84); backdrop-filter: blur(6px);
-    border: 2px solid rgba(255, 209, 102, 0.35); border-radius: 10px;
-    padding: 12px 14px; width: 275px; font-size: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  }
-  #eca-hud h4 { color: #ffd166; margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800; }
-  .eca-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 600; }
-  .team-online-box {
-    margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(92, 225, 230, 0.35);
-    font-size: 11px; color: #74c69d;
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 14px;
+    padding: 14px 16px;
+    width: 285px;
+    font-size: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   }
 
-  /* F3 Debug & Console */
+  #eca-hud h4 {
+    color: var(--accent-gold);
+    margin-bottom: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-weight: 800;
+  }
+
+  .eca-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .eca-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+  }
+
+  .team-online-box {
+    margin-top: 9px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    font-size: 11px;
+    color: #6ee7b7;
+    font-weight: 600;
+  }
+
+  /* F3 Debug Compacto */
   #f3-panel {
-    position: fixed; top: 230px; left: 14px; background: rgba(0,0,0,0.62);
-    backdrop-filter: blur(4px);
-    padding: 8px 10px; border-radius: 6px; font-family: monospace; font-size: 11px;
-    color: #a3e635; line-height: 1.45; border-left: 3px solid #84cc16;
+    position: fixed;
+    top: 268px;
+    left: 16px;
+    background: rgba(9, 14, 26, 0.72);
+    backdrop-filter: blur(6px);
+    padding: 8px 11px;
+    border-radius: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: #a3e635;
+    line-height: 1.5;
+    border-left: 3px solid #84cc16;
   }
-  #console-box {
-    position: fixed; bottom: 102px; left: 50%; transform: translateX(-50%);
-    width: 540px; background: rgba(10, 14, 20, 0.95); border: 2px solid #5ce1e6;
-    border-radius: 8px; padding: 10px; pointer-events: auto; z-index: 50;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+
+  /* Barra Inferior (Vida, Fome, Hotbar) */
+  #bottom-hud {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
   }
-  #console-input {
-    width: 100%; background: transparent; border: none; color: #5ce1e6;
-    font-family: monospace; font-size: 14px; outline: none;
+
+  .bars-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 504px;
+    font-size: 13px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
   }
-  #chat-log {
-    position: fixed; bottom: 145px; left: 14px; width: 360px; max-height: 160px;
-    overflow: hidden; display: flex; flex-direction: column; gap: 4px; font-size: 12px;
+
+  #hotbar {
+    display: flex;
+    gap: 5px;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(8px);
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.75);
   }
-  .chat-msg {
-    background: rgba(10, 15, 24, 0.78); backdrop-filter: blur(4px);
-    padding: 5px 10px; border-radius: 5px; border-left: 3px solid #2ec4b6;
+
+  .slot {
+    width: 50px;
+    height: 52px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(71, 85, 105, 0.6);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 10px;
+    text-align: center;
+    transition: all 0.12s ease;
+  }
+
+  .slot.active {
+    border: 2px solid #ffffff;
+    background: rgba(56, 189, 248, 0.25);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35);
+  }
+
+  .slot-key {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    font-size: 9px;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+  }
+
+  .slot-icon {
+    font-size: 19px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65));
+  }
+
+  .slot-count {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    font-size: 10.5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: #fff;
     text-shadow: 1px 1px 0 #000;
   }
 
-  /* Modal Crafting & Inventário (Tecla E) */
-  #inv-modal, #teacher-modal {
-    position: fixed; inset: 0; background: rgba(8, 12, 20, 0.88);
-    backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center; z-index: 90; pointer-events: auto;
+  /* Chat & Console */
+  #console-box {
+    position: fixed;
+    bottom: 112px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 560px;
+    background: rgba(9, 14, 26, 0.96);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 10px;
+    padding: 11px 14px;
+    pointer-events: auto;
+    z-index: 50;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
   }
-  .recipe-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-  .recipe-btn {
-    background: #161f2e; border: 1px solid #38465e; color: #fff; padding: 10px;
-    border-radius: 7px; text-align: left; cursor: pointer; font-size: 12px; transition: 0.15s;
-  }
-  .recipe-btn:hover { border-color: #2ec4b6; background: #1e2b40; transform: translateY(-1px); }
 
-  /* Tabela Painel Professor */
-  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-  th, td { border: 1px solid #38465e; padding: 8px 9px; text-align: left; }
-  th { background: #151b26; color: #5ce1e6; }
-  tr:nth-child(even) { background: #19212e; }
+  #console-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    outline: none;
+  }
+
+  #chat-log {
+    position: fixed;
+    bottom: 115px;
+    left: 16px;
+    width: 360px;
+    max-height: 170px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+  }
+
+  .chat-msg {
+    background: rgba(9, 14, 26, 0.82);
+    backdrop-filter: blur(6px);
+    padding: 6px 11px;
+    border-radius: 7px;
+    border-left: 3px solid var(--accent-teal);
+    line-height: 1.35;
+  }
+
+  /* ==========================================================================
+     MODAIS ELEVADOS (CRAFTING, PAUSA, PAINEL DO PROFESSOR) — Z-INDEX 250
+     ========================================================================== */
+  #inv-modal, #teacher-modal, #pause-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 9, 17, 0.92);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 250;
+    pointer-events: auto;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .recipe-btn {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 12.5px;
+    transition: 0.15s;
+  }
+
+  .recipe-btn:hover {
+    border-color: var(--accent-teal);
+    background: rgba(30, 41, 59, 0.95);
+    transform: translateY(-1px);
+  }
+
+  /* ==========================================================================
+     PAINEL DO PROFESSOR (KPIs, FILTROS & TABELA EXECUTIVA)
+     ========================================================================== */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 14px 0;
+  }
+
+  @media (max-width: 720px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .kpi-card {
+    background: rgba(9, 14, 26, 0.85);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar input, .filter-bar select {
+    flex: 1;
+    min-width: 180px;
+    margin: 0;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    max-height: 330px;
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(9, 14, 26, 0.7);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  th {
+    background: rgba(15, 23, 42, 0.98);
+    color: var(--accent-cyan);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  tr:hover td {
+    background: rgba(56, 189, 248, 0.06);
+  }
+
+  .grade-pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    background: rgba(251, 191, 36, 0.16);
+    color: var(--accent-gold);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+  }
+
+  .alert-banner {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fde68a;
+    padding: 9px 13px;
+    border-radius: 9px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
 </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
 
-<!-- TELA INICIAL: LOGIN @ESCOLA + SALA DE EQUIPE MULTIPLAYER -->
+<!-- ==========================================================================
+     TELA INICIAL: LOGIN @ESCOLA, SALA DA EQUIPE & ÁREA DO PROFESSOR
+     ========================================================================== -->
 <div id="start-screen" class="overlay">
   <div class="card">
-    <div class="pixel-title">VOXELCRAFT STUDIO</div>
-    <p class="subtitle">Edição Multiplayer por Equipes & Shaders HD — Construam juntos os 4 Direitos Fundamentais (ECA & CF/88) no mesmo mundo em tempo real.</p>
+    <div class="brand-header">
+      <div class="brand-badge">SEED-PR • Programa Se Liga • ECA & CF/88</div>
+      <div class="pixel-title">VOXELCRAFT STUDIO</div>
+      <p class="subtitle">
+        Ambiente 3D Colaborativo por Equipes. Construam juntos os 4 Direitos Fundamentais (Educação, Cultura, Esporte e Lazer) com avaliação automática em tempo real.
+      </p>
+    </div>
 
     <div class="grid-2">
-      <!-- Bloco 1: Identificação e Firebase @escola -->
+      <!-- Bloco 1: Identificação do Aluno -->
       <div class="box">
-        <h3>1. Identificação do Aluno (@escola)</h3>
-        <button id="btn-google-login" class="btn btn-google" onclick="loginWithGoogle()">
-          Entrar com Google (@escola)
-        </button>
-        <div id="auth-status" class="status-pill">Conectando ao projeto seliga-voxelcraft...</div>
+        <div>
+          <div class="box-title">
+            <span>1. Identificação do Estudante</span>
+            <span style="color:#38bdf8; font-size:10px;">@ESCOLA</span>
+          </div>
 
-        <label>Nome Completo do Aluno:</label>
-        <input type="text" id="student-name" placeholder="Ex: Ana Clara Souza">
+          <button id="btn-google-login" class="btn btn-google" style="margin-top:0;" onclick="loginWithGoogle()">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/><path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/></svg>
+            Entrar com Google (@escola)
+          </button>
 
-        <label>E-mail Institucional (@escola):</label>
-        <input type="email" id="student-email" placeholder="ana.souza@escola.pr.gov.br">
+          <div id="auth-status" class="status-pill">Conectando ao Firebase (seliga-voxelcraft)...</div>
 
-        <label>Código da Sala / Equipe (Para jogar juntos):</label>
-        <input type="text" id="student-team" placeholder="Ex: 8B-EQUIPE1" value="EQUIPE-ALPHA">
+          <label>Nome Completo do Aluno:</label>
+          <input type="text" id="student-name" placeholder="Ex: Ana Clara Souza">
+
+          <label>E-mail Institucional (@escola):</label>
+          <input type="email" id="student-email" placeholder="ana.souza@escola.pr.gov.br">
+
+          <label>Código da Sala / Equipe (Multiplayer):</label>
+          <input type="text" id="student-team" placeholder="Ex: 8B-EQUIPE1" value="EQUIPE-ALPHA">
+        </div>
       </div>
 
-      <!-- Bloco 2: Mundo, Seed e Arquivos -->
+      <!-- Bloco 2: Mundo & Área do Professor -->
       <div class="box">
-        <h3>2. Mundo Compartilhado & Arquivos</h3>
-        <label>Seed do Mundo (Base do Terreno):</label>
-        <input type="text" id="world-seed" value="ECA1988">
+        <div>
+          <div class="box-title">
+            <span>2. Mundo 3D & Gestão Docente</span>
+            <span style="color:#2dd4bf; font-size:10px;">REAL-TIME</span>
+          </div>
 
-        <label>Modo de Jogo:</label>
-        <select id="game-mode">
-          <option value="survival">Sobrevivência Cooperativa (Mineração & Crafting)</option>
-          <option value="creative">Criativo Cooperativo (Blocos Infinitos)</option>
-        </select>
+          <label style="margin-top:0;">Seed do Terreno (Base da Equipe):</label>
+          <input type="text" id="world-seed" value="ECA1988">
 
-        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
-          Importar Mundo Salvo (.voxelworld)
-        </button>
-        <input type="file" id="import-file" accept=".voxelworld,.json" class="hidden" onchange="importWorldFile(event)">
+          <label>Modo de Jogo:</label>
+          <select id="game-mode">
+            <option value="survival">Sobrevivência Cooperativa (Mineração & Crafting)</option>
+            <option value="creative">Criativo Cooperativo (Blocos Infinitos)</option>
+          </select>
 
-        <button class="btn btn-warn" onclick="openTeacherModal()">
-          Painel do Professor (Notas 0–10 & CSV)
-        </button>
+          <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+            📂 Importar Mundo Salvo (.voxelworld)
+          </button>
+          <input type="file" id="import-file" accept=".voxelworld,.json" class="hidden" onchange="importWorldFile(event)">
+        </div>
+
+        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.1);">
+          <button class="btn btn-teacher" style="margin-top:0;" onclick="openTeacherModal()">
+            📊 Área do Professor — Notas (0–10) & CSV
+          </button>
+        </div>
       </div>
     </div>
 
     <button class="btn btn-primary" onclick="startGame()">
-      ▶ ENTRAR NA SALA DA EQUIPE E MUNDO 3D
+      ▶ Entrar na Sala da Equipe e Iniciar Mundo 3D
     </button>
   </div>
 </div>
 
-<!-- HUD IN-GAME -->
+<!-- ==========================================================================
+     HUD IN-GAME
+     ========================================================================== -->
 <div id="hud" class="hidden">
   <div id="crosshair"></div>
 
-  <!-- Painel de Nota Individual + Equipe ao Vivo (0 a 10) -->
+  <!-- Painel Superior Esquerdo: Nota ao Vivo & Atalhos -->
   <div id="grade-hud">
     <div class="grade-header">
-      <span class="grade-title">Nota (Equipe + Individual)</span>
+      <span class="grade-title">Avaliação Se Liga</span>
       <span class="grade-score" id="live-grade">0.0/10</span>
     </div>
-    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;" id="hud-student-info">Aluno: ---</div>
-    <div style="font-size:11px; color:#5ce1e6; font-weight:700; margin-bottom:6px;" id="hud-team-info">Sala: ---</div>
+
+    <div style="font-size:11.5px; color:#f1f5f9; font-weight:600;" id="hud-student-info">Aluno: ---</div>
+    <div style="font-size:11px; color:var(--accent-cyan); font-weight:700; margin-top:2px;" id="hud-team-info">Sala: ---</div>
+
+    <div class="hud-quick-actions">
+      <button class="hud-chip-btn" onclick="openTeacherModal()">📊 Professor (P)</button>
+      <button class="hud-chip-btn secondary" onclick="togglePauseMenu(true)">⚙️ Menu / Salvar</button>
+    </div>
 
     <div class="axis-row">
       <div class="axis-label"><span>1. Cidadania Equipe (3.0)</span><span id="ax1-val">0.0</span></div>
@@ -295,34 +912,36 @@
     </div>
   </div>
 
-  <!-- Checklist dos 4 Direitos Constitucionais + Colegas Online -->
+  <!-- Painel Superior Direito: Checklist ECA & Colegas Online -->
   <div id="eca-hud">
     <h4>Direitos da Equipe (CF/88)</h4>
-    <div class="eca-item"><span>📘 Educação (Escola Norte)</span><span id="st-edu">0/4</span></div>
-    <div class="eca-item"><span>🎭 Cultura (Cinema Sul)</span><span id="st-cul">0/4</span></div>
-    <div class="eca-item"><span>⚽ Esporte (Estádio Leste)</span><span id="st-esp">0/4</span></div>
-    <div class="eca-item"><span>🌳 Lazer (Praça Oeste)</span><span id="st-laz">0/4</span></div>
+    <div class="eca-item"><span>📘 Educação (Escola Norte)</span><span class="eca-badge" id="st-edu">0/4</span></div>
+    <div class="eca-item"><span>🎭 Cultura (Cinema Sul)</span><span class="eca-badge" id="st-cul">0/4</span></div>
+    <div class="eca-item"><span>⚽ Esporte (Estádio Leste)</span><span class="eca-badge" id="st-esp">0/4</span></div>
+    <div class="eca-item"><span>🌳 Lazer (Praça Oeste)</span><span class="eca-badge" id="st-laz">0/4</span></div>
+
     <div class="team-online-box" id="team-online-list">
       👥 Colegas na sala: conectando...
     </div>
-    <div style="margin-top:6px; font-size:10px; color:#cbd5e1; line-height:1.35;">
-      <b>Controles:</b> WASD andar | Shift correr | Espaço pular | Esq. minerar/atacar | Dir. ou Q construir | E crafting | / comandos
+
+    <div style="margin-top:8px; font-size:10.5px; color:#cbd5e1; line-height:1.4;">
+      <b>WASD</b> mover • <b>Espaço</b> pular • <b>Esq.</b> minerar • <b>Dir./Q</b> construir • <b>E</b> crafting • <b>/</b> comandos • <b>P</b> professor
     </div>
   </div>
 
   <!-- F3 Debug -->
   <div id="f3-panel">
-    VoxelCraft Multiplayer 2.1 (Sync Real-Time)<br>
+    VoxelCraft Studio 2.2 HD<br>
     XYZ: <span id="f3-xyz">0, 0, 0</span> | Zona: <span id="f3-zone">Centro</span><br>
-    Modo: <span id="f3-mode">Survival</span> | Hora: <span id="f3-time">Dia</span><br>
-    Sync Sala: <span id="f3-sync">Aguardando...</span>
+    Modo: <span id="f3-mode">SURVIVAL</span> | Hora: <span id="f3-time">Dia</span><br>
+    Sync: <span id="f3-sync">Aguardando...</span>
   </div>
 
   <div id="chat-log"></div>
 
   <!-- Console de Comandos (/) -->
   <div id="console-box" class="hidden">
-    <input type="text" id="console-input" placeholder="Digite um comando (ex: /fill 3 2 3 oak_planks, /tp 0 8 -14, /give torch 8, /time set day)">
+    <input type="text" id="console-input" placeholder="Comando (ex: /fill 3 2 3 oak_planks | /tp 0 4 -14 | /give torch 8 | /time set day)">
   </div>
 
   <!-- Barra Inferior (Vida, Fome, Hotbar) -->
@@ -336,33 +955,90 @@
   </div>
 </div>
 
-<!-- MODAL DE INVENTÁRIO & CRAFTING (TECLA E) -->
+<!-- ==========================================================================
+     MODAL DE INVENTÁRIO & CRAFTING (TECLA E)
+     ========================================================================== -->
 <div id="inv-modal" class="hidden">
-  <div class="card" style="max-width:620px;">
+  <div class="card" style="max-width:650px;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="color:#ffd166; font-size:18px;">Bancada de Criação (Crafting) & Mochila</h2>
-      <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 14px;" onclick="toggleInventory(false)">Fechar (E)</button>
+      <h2 style="color:var(--accent-gold); font-size:18px; font-weight:800;">Bancada de Criação (Crafting)</h2>
+      <button class="btn btn-secondary btn-sm" onclick="toggleInventory(false)">Fechar (E)</button>
     </div>
-    <p style="font-size:12px; color:#a8b8d0; margin-top:4px;">Combine recursos minerados para fabricar ferramentas e os Marcos dos Direitos do ECA (conta pontos no Eixo 2!).</p>
+    <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">
+      Combine recursos minerados para fabricar ferramentas e os Marcos dos Direitos do ECA (pontua no Eixo 2).
+    </p>
     <div class="recipe-grid" id="recipe-list"></div>
-    <div style="margin-top:14px; display:flex; gap:10px;">
-      <button class="btn btn-primary" onclick="exportWorldFile()">Baixar Mundo (.voxelworld)</button>
-      <button class="btn btn-warn" onclick="syncToFirebase(true)">Enviar Nota ao Professor Agora</button>
+    <div style="margin-top:16px; display:flex; gap:10px;">
+      <button class="btn btn-primary" style="margin-top:0;" onclick="exportWorldFile()">💾 Baixar Mundo (.voxelworld)</button>
+      <button class="btn btn-teacher" style="margin-top:0;" onclick="syncToFirebase(true)">☁️ Enviar Nota Agora</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL PAINEL DO PROFESSOR -->
-<div id="teacher-modal" class="hidden">
-  <div class="card" style="max-width:880px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="color:#5ce1e6; font-size:18px;">Painel de Avaliação por Equipe e Aluno — Se Liga (0,0 a 10,0)</h2>
-      <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 14px;" onclick="closeTeacherModal()">Fechar</button>
-    </div>
-    <p style="font-size:12px; color:#a8b8d0; margin-top:4px;">
-      Registra automaticamente os dados salvos no navegador e no Cloud Firestore (projeto <b>seliga-voxelcraft</b>).
+<!-- ==========================================================================
+     MODAL MENU DE PAUSA / OPÇÕES IN-GAME
+     ========================================================================== -->
+<div id="pause-modal" class="hidden">
+  <div class="card" style="max-width:440px; text-align:center;">
+    <div class="brand-badge">Jogo Pausado</div>
+    <h2 style="font-size:19px; font-weight:800; margin-bottom:6px;">Menu da Sala & Avaliação</h2>
+    <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">
+      Seu progresso é salvo automaticamente a cada 10 segundos.
     </p>
-    <div style="overflow-x:auto; max-height:340px;">
+    <button class="btn btn-primary" onclick="togglePauseMenu(false)">▶ Voltar ao Jogo</button>
+    <button class="btn btn-teacher" onclick="togglePauseMenu(false); openTeacherModal();">📊 Abrir Área do Professor</button>
+    <button class="btn btn-secondary" onclick="syncToFirebase(true)">☁️ Sincronizar Nota com Firebase</button>
+    <button class="btn btn-secondary" onclick="exportWorldFile()">💾 Exportar Mundo (.voxelworld)</button>
+    <button class="btn btn-danger" onclick="returnToStartScreen()">🚪 Sair para Tela Inicial</button>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL ÁREA DO PROFESSOR (ACESSO DIRETO, KPIs, FILTROS & CSV)
+     ========================================================================== -->
+<div id="teacher-modal" class="hidden">
+  <div class="card" style="max-width:960px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <div class="brand-badge" style="margin-bottom:4px;">Gestão Docente • Acesso Desbloqueado</div>
+        <h2 style="color:var(--accent-cyan); font-size:19px; font-weight:800;">
+          Painel de Avaliação por Equipe e Aluno — Se Liga (0,0 a 10,0)
+        </h2>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="closeTeacherModal()">✕ Fechar</button>
+    </div>
+
+    <!-- Indicadores Resumidos (KPIs) -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Alunos Avaliados</div>
+        <div class="kpi-value" id="kpi-students">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Média Geral (0–10)</div>
+        <div class="kpi-value" style="color:var(--accent-gold);" id="kpi-avg">0.0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Equipes / Salas</div>
+        <div class="kpi-value" style="color:var(--accent-cyan);" id="kpi-teams">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Maior Nota</div>
+        <div class="kpi-value" style="color:var(--accent-emerald);" id="kpi-max">0.0</div>
+      </div>
+    </div>
+
+    <div id="teacher-warn-area"></div>
+
+    <!-- Barra de Busca e Filtro por Equipe -->
+    <div class="filter-bar">
+      <input type="text" id="teacher-search" placeholder="🔍 Filtrar por nome do aluno ou e-mail @escola..." oninput="renderTeacherTable()">
+      <select id="teacher-team-filter" onchange="renderTeacherTable()">
+        <option value="">Todas as Equipes / Salas</option>
+      </select>
+    </div>
+
+    <div class="table-wrapper">
       <table>
         <thead>
           <tr>
@@ -371,7 +1047,7 @@
             <th>Equipe / Sala</th>
             <th>Cidadania (3.0)</th>
             <th>Crafting (2.5)</th>
-            <th>Código / (2.5)</th>
+            <th>Código (2.5)</th>
             <th>Defesa (2.0)</th>
             <th>Nota Final</th>
           </tr>
@@ -379,9 +1055,17 @@
         <tbody id="teacher-table-body"></tbody>
       </table>
     </div>
-    <div style="display:flex; gap:10px; margin-top:12px;">
-      <button class="btn btn-primary" onclick="exportGradesCSV()">Exportar Planilha de Notas (.CSV)</button>
-      <button class="btn btn-secondary" onclick="loadTeacherRecords()">Atualizar Lista</button>
+
+    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+      <button class="btn btn-primary" style="flex:2; margin-top:0;" onclick="exportGradesCSV()">
+        📥 Exportar Planilha de Notas (.CSV para Excel)
+      </button>
+      <button class="btn btn-secondary" style="flex:1; margin-top:0;" onclick="loadTeacherRecords()">
+        🔄 Atualizar Lista
+      </button>
+      <button class="btn btn-secondary" style="flex:1; margin-top:0;" onclick="seedDemoRecord()">
+        ➕ Simular Aluno Teste
+      </button>
     </div>
   </div>
 </div>
@@ -415,14 +1099,15 @@ try {
     auth = firebase.auth();
     db = firebase.firestore();
     firebaseReady = true;
-    document.getElementById("auth-status").textContent = "Firebase Conectado (seliga-voxelcraft)! Pronto para login @escola.";
-    document.getElementById("auth-status").classList.add("status-ok");
+    const st = document.getElementById("auth-status");
+    st.textContent = "Firebase Conectado (seliga-voxelcraft) • Pronto para @escola";
+    st.classList.add("status-ok");
   } else {
-    document.getElementById("auth-status").textContent = "Modo Offline/Local (SDK Firebase não carregou).";
+    document.getElementById("auth-status").textContent = "Modo Local Ativo (SDK Firebase offline).";
   }
 } catch (e) {
   console.warn("Firebase em modo local:", e);
-  document.getElementById("auth-status").textContent = "Modo Local (Verifique sua conexão com a internet).";
+  document.getElementById("auth-status").textContent = "Modo Local Ativo (Sem conexão com nuvem).";
 }
 
 async function loginWithGoogle() {
@@ -437,7 +1122,7 @@ async function loginWithGoogle() {
     if (!email.toLowerCase().includes("@escola")) {
       await auth.signOut();
       const st = document.getElementById("auth-status");
-      st.textContent = "Acesso negado: use apenas seu e-mail institucional @escola!";
+      st.textContent = "Acesso negado: utilize seu e-mail institucional @escola!";
       st.className = "status-pill status-err";
       return;
     }
@@ -447,7 +1132,7 @@ async function loginWithGoogle() {
     st.textContent = "Autenticado: " + email;
     st.className = "status-pill status-ok";
   } catch (err) {
-    alert("Erro no login Google (verifique se o domínio está autorizado no Firebase Authentication): " + err.message);
+    alert("Erro no login Google (verifique domínios autorizados no Firebase): " + err.message);
   }
 }
 
@@ -626,8 +1311,8 @@ let gameState = {
   seed: "ECA1988",
   mode: "survival",
   worldBlocks: {},
-  teamEdits: {}, // Delta de blocos modificados pela equipe no Firebase
-  teammates: {}, // Avatares em tempo real dos colegas da equipe
+  teamEdits: {},
+  teammates: {},
   hotbar: [
     { type: "pickaxe", count: 1 },
     { type: "sword", count: 1 },
@@ -679,7 +1364,6 @@ function computeGrade() {
   const m = gameState.metrics;
   const tm = gameState.teamMetrics;
 
-  // Eixo 1 (3.0 pts): Combina construção coletiva da equipe nas 4 zonas ECA + marcos entregues
   const combinedZoneBlocks = Math.max(m.zoneBlocksPlaced, tm.zoneBlocksPlaced);
   const combinedMon = {
     edu: Math.max(m.monumentsDelivered.edu || 0, tm.monumentsDelivered.edu || 0),
@@ -690,15 +1374,12 @@ function computeGrade() {
   const monTotal = Object.values(combinedMon).reduce((a, b) => a + b, 0);
   const ax1 = Math.min(3.0, (combinedZoneBlocks * 0.12) + (Math.min(4, monTotal) * 0.30));
 
-  // Eixo 2 (2.5 pts): Mineração & Crafting individual
   const uniqueCrafted = Object.keys(m.craftedItems).length;
   const ax2 = Math.min(2.5, (Math.min(10, m.resourcesMined) * 0.10) + (Math.min(3, uniqueCrafted) * 0.50));
 
-  // Eixo 3 (2.5 pts): Programação / Comandos individuais
   const uniqueCmds = Object.keys(m.validCommands).length;
   const ax3 = Math.min(2.5, Math.min(2, uniqueCmds) * 1.25);
 
-  // Eixo 4 (2.0 pts): Defesa & Participação ativa
   const activePts = Math.min(1.0, (m.activeSeconds / 45) * 1.0);
   const mobPts = Math.min(1.0, m.mobsDefeated * 0.34);
   const ax4 = Math.min(2.0, activePts + mobPts);
@@ -753,7 +1434,6 @@ function startTeamRealtimeSync() {
     if (!doc.exists) return;
     const data = doc.data() || {};
 
-    // 1. Aplica blocos construídos ou minerados pelos colegas da equipe
     if (data.edits) {
       let changed = false;
       for (const [k, val] of Object.entries(data.edits)) {
@@ -767,7 +1447,6 @@ function startTeamRealtimeSync() {
       if (changed) recalcTeamZoneMetrics();
     }
 
-    // 2. Atualiza posições e avatares dos colegas da equipe
     if (data.players) {
       const now = Date.now();
       const activeMates = {};
@@ -842,7 +1521,7 @@ async function flushTeamUpdates() {
     await roomRef.set(updateObj, { merge: true });
     document.getElementById("f3-sync").textContent = "Equipe Sync OK (" + new Date().toLocaleTimeString() + ")";
   } catch (e) {
-    document.getElementById("f3-sync").textContent = "Sync Local (Verifique Login @escola)";
+    document.getElementById("f3-sync").textContent = "Modo Local (Offline)";
   }
 }
 
@@ -872,25 +1551,23 @@ async function syncToFirebase(manual = false) {
   if (firebaseReady && db) {
     try {
       await db.collection("avaliacoes_seliga").doc(gameState.studentEmail).set(payload, { merge: true });
-      if (manual) addChat("Nota (" + g.total.toFixed(1) + ") enviada com sucesso ao Professor!");
+      if (manual) addChat("Nota (" + g.total.toFixed(1) + ") salva na nuvem com sucesso!");
     } catch (e) {
-      if (manual) addChat("Aviso: Entre com o botão Google (@escola) para gravar na nuvem.");
+      if (manual) addChat("Nota (" + g.total.toFixed(1) + ") salva localmente neste dispositivo!");
     }
   } else if (manual) {
     addChat("Progresso salvo localmente! Nota atual: " + g.total.toFixed(1));
   }
 }
 
-// Sincroniza posição e blocos da equipe a cada 2.5 segundos
 setInterval(() => {
-  if (gameState.started && !gameState.paused) {
+  if (gameState.started && !gameState.paused && !invOpen && !consoleOpen) {
     flushTeamUpdates();
   }
 }, 2500);
 
-// Contabiliza participação e envia nota do aluno a cada 10 segundos
 setInterval(() => {
-  if (gameState.started && !gameState.paused) {
+  if (gameState.started && !gameState.paused && !invOpen && !consoleOpen) {
     gameState.metrics.activeSeconds += 1;
     updateGradeHUD();
     if (gameState.metrics.activeSeconds % 10 === 0) syncToFirebase(false);
@@ -1001,7 +1678,7 @@ function importWorldFile(e) {
       if (parsed.blocks) {
         gameState.worldBlocks = parsed.blocks;
         if (parsed.seed) document.getElementById("world-seed").value = parsed.seed;
-        alert("Mundo carregado com sucesso (" + Object.keys(parsed.blocks).length + " blocos)! Clique em Iniciar Missão.");
+        alert("Mundo carregado (" + Object.keys(parsed.blocks).length + " blocos)! Clique em Entrar na Sala.");
       }
     } catch (err) {
       alert("Arquivo .voxelworld inválido.");
@@ -1033,7 +1710,7 @@ function startGame() {
   const team = document.getElementById("student-team").value.trim();
 
   if (!name || !email.includes("@escola")) {
-    alert("Por favor, informe seu Nome Completo e um e-mail institucional válido contendo '@escola' para registrar sua avaliação.");
+    alert("Por favor, informe seu Nome Completo e um e-mail institucional contendo '@escola' para registrar sua avaliação.");
     return;
   }
 
@@ -1043,6 +1720,7 @@ function startGame() {
   gameState.teamId = sanitizeTeamId(gameState.studentTeam);
   gameState.seed = document.getElementById("world-seed").value.trim() || "ECA1988";
   gameState.mode = document.getElementById("game-mode").value;
+  gameState.paused = false;
 
   if (Object.keys(gameState.worldBlocks).length === 0) {
     generateWorld(gameState.seed);
@@ -1053,22 +1731,48 @@ function startGame() {
   renderRecipes();
   updateGradeHUD();
 
-  document.getElementById("hud-student-info").textContent = `${name} (${email})`;
+  document.getElementById("hud-student-info").textContent = `${name} • ${email}`;
   document.getElementById("hud-team-info").textContent = `Sala da Equipe: ${gameState.studentTeam}`;
   document.getElementById("f3-mode").textContent = gameState.mode.toUpperCase();
   document.getElementById("start-screen").classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
   gameState.started = true;
 
-  // Inicia sincronização multiplayer com a equipe
   startTeamRealtimeSync();
   flushTeamUpdates();
+  syncToFirebase(false);
 
-  addChat(`Você entrou na sala '${gameState.studentTeam}'! Colegas com o mesmo código constroem juntos!`);
+  addChat(`Bem-vindo(a), ${name}! Conectado à sala '${gameState.studentTeam}'.`);
   try {
     canvas.requestPointerLock?.();
   } catch (err) {}
   requestAnimationFrame(gameLoop);
+}
+
+function returnToStartScreen() {
+  syncToFirebase(false);
+  gameState.started = false;
+  gameState.paused = false;
+  if (unsubRoom) { try { unsubRoom(); } catch (e) {} }
+  document.getElementById("pause-modal").classList.add("hidden");
+  document.getElementById("hud").classList.add("hidden");
+  document.getElementById("start-screen").classList.remove("hidden");
+  try { document.exitPointerLock?.(); } catch (e) {}
+}
+
+function togglePauseMenu(force) {
+  const modal = document.getElementById("pause-modal");
+  const shouldOpen = typeof force === "boolean" ? force : modal.classList.contains("hidden");
+  gameState.paused = shouldOpen;
+  if (shouldOpen) {
+    modal.classList.remove("hidden");
+    try { document.exitPointerLock?.(); } catch (e) {}
+  } else {
+    modal.classList.add("hidden");
+    if (gameState.started && !invOpen && !consoleOpen) {
+      try { canvas.requestPointerLock?.(); } catch (e) {}
+    }
+  }
 }
 
 function spawnMobs() {
@@ -1171,7 +1875,9 @@ function toggleInventory(force) {
     try { document.exitPointerLock?.(); } catch (e) {}
   } else {
     modal.classList.add("hidden");
-    try { canvas.requestPointerLock?.(); } catch (e) {}
+    if (gameState.started && !gameState.paused) {
+      try { canvas.requestPointerLock?.(); } catch (e) {}
+    }
   }
 }
 
@@ -1245,7 +1951,7 @@ function executeCommand(raw) {
     }
     spawnBlockParticles(sx + 1, sy + 1, sz + 1, BLOCK_TYPES[bType].color);
     gameState.metrics.validCommands["fill"] = true;
-    addChat(`Loop 3D executado: ${placed} blocos de ${BLOCK_TYPES[bType].name} sincronizados com a equipe!`);
+    addChat(`Loop 3D executado: ${placed} blocos de ${BLOCK_TYPES[bType].name} criados!`);
     flushTeamUpdates();
   } else {
     addChat("Comandos: /fill 3 2 3 oak_planks | /tp 0 4 -14 | /give torch 8 | /time set day");
@@ -1278,7 +1984,6 @@ function getTargetRay() {
       prev = { x: rx, y: ry, z: rz };
     }
   }
-  // Se mirar no horizonte sem acertar bloco, permite construir 3 blocos à frente na altura do olhar/chão
   const fx = Math.round(p.x + dirX * 3.0);
   const fy = Math.max(1, Math.round(p.y + 1.2 + dirY * 3.0));
   const fz = Math.round(p.z + dirZ * 3.0);
@@ -1292,7 +1997,7 @@ function registerBlockPlacement(x, y, z, type) {
     const info = BLOCK_TYPES[type];
     if (info && info.monument === zone.id) {
       gameState.metrics.monumentsDelivered[zone.id] = (gameState.metrics.monumentsDelivered[zone.id] || 0) + 1;
-      addChat(`Marco de ${zone.name} posicionado pela equipe! (+Pontos Cidadania!)`);
+      addChat(`Marco de ${zone.name} posicionado! (+Pontos Cidadania!)`);
     }
   }
   recalcTeamZoneMetrics();
@@ -1342,7 +2047,6 @@ function handleLeftClick() {
 
 function handleRightClick() {
   let slot = gameState.hotbar[gameState.selectedSlot];
-  // Se estiver segurando ferramenta (Picareta/Espada) ao apertar Q, troca automaticamente para o primeiro bloco disponível!
   if (!slot || BLOCK_TYPES[slot.type]?.tool) {
     const blockSlotIdx = gameState.hotbar.findIndex(s => !BLOCK_TYPES[s.type]?.tool && (gameState.mode === "creative" || s.count > 0));
     if (blockSlotIdx === -1) {
@@ -1354,7 +2058,7 @@ function handleRightClick() {
     renderHotbar();
   }
   if (gameState.mode === "survival" && slot.count <= 0) {
-    addChat("Este bloco acabou! Selecione outro slot (3 a 9) ou use a roda do mouse.");
+    addChat("Este bloco acabou! Selecione outro slot (3 a 9) ou use o scroll do mouse.");
     return;
   }
 
@@ -1400,6 +2104,20 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
+  if (e.key === "Escape") {
+    const tm = document.getElementById("teacher-modal");
+    if (!tm.classList.contains("hidden")) {
+      closeTeacherModal();
+      return;
+    }
+    if (invOpen) {
+      toggleInventory(false);
+      return;
+    }
+    togglePauseMenu();
+    return;
+  }
+
   if (e.key === "/" || e.key === "t" || e.key === "T") {
     e.preventDefault();
     consoleOpen = true;
@@ -1413,6 +2131,13 @@ window.addEventListener("keydown", (e) => {
 
   if (e.key === "e" || e.key === "E") {
     toggleInventory();
+    return;
+  }
+
+  if (e.key === "p" || e.key === "P") {
+    const tm = document.getElementById("teacher-modal");
+    if (tm.classList.contains("hidden")) openTeacherModal();
+    else closeTeacherModal();
     return;
   }
 
@@ -1441,7 +2166,7 @@ window.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  if (!gameState.started || invOpen || consoleOpen) return;
+  if (!gameState.started || gameState.paused || invOpen || consoleOpen) return;
   if (document.pointerLockElement !== canvas) {
     try { canvas.requestPointerLock?.(); } catch (err) {}
     return;
@@ -1451,7 +2176,7 @@ canvas.addEventListener("mousedown", (e) => {
 });
 window.addEventListener("contextmenu", e => e.preventDefault());
 window.addEventListener("wheel", (e) => {
-  if (!gameState.started || invOpen || consoleOpen) return;
+  if (!gameState.started || gameState.paused || invOpen || consoleOpen) return;
   const dir = e.deltaY > 0 ? 1 : -1;
   gameState.selectedSlot = (gameState.selectedSlot + dir + gameState.hotbar.length) % gameState.hotbar.length;
   renderHotbar();
@@ -1638,7 +2363,7 @@ function drawVoxelMob(m) {
   ctx.fillRect(base.x - headSize * 0.32, head.y + headSize * 0.32, headSize * 0.22, headSize * 0.16);
   ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.32, headSize * 0.22, headSize * 0.16);
 
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillStyle = "rgba(0,0,0,0.65)";
   ctx.fillRect(base.x - 52, head.y - 22, 104, 16);
   ctx.fillStyle = "#fff";
   ctx.font = "bold 10px sans-serif";
@@ -1646,7 +2371,6 @@ function drawVoxelMob(m) {
   ctx.fillText(`${m.name} (${m.hp}♥)`, base.x, head.y - 10);
 }
 
-// Renderiza o Avatar 3D dos colegas da equipe online
 function drawTeammateAvatar(tm) {
   const base = projectPoint(tm.x, tm.y - 0.5, tm.z);
   const head = projectPoint(tm.x, tm.y + 1.25, tm.z);
@@ -1655,35 +2379,30 @@ function drawTeammateAvatar(tm) {
   const h = Math.abs(base.y - head.y);
   const w = h * 0.48;
 
-  // Sombra
   ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath();
   ctx.ellipse(base.x, base.y, w * 0.65, w * 0.25, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Camisa da equipe
   ctx.fillStyle = tm.color || "#38bdf8";
   ctx.fillRect(base.x - w * 0.38, head.y + h * 0.32, w * 0.76, h * 0.68);
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.4;
   ctx.strokeRect(base.x - w * 0.38, head.y + h * 0.32, w * 0.76, h * 0.68);
 
-  // Cabeça estilo Steve/Alex
   const headSize = w * 0.85;
   ctx.fillStyle = "#f1c27d";
   ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize);
   ctx.strokeRect(base.x - headSize / 2, head.y, headSize, headSize);
 
-  // Olhos amigáveis
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(base.x - headSize * 0.28, head.y + headSize * 0.35, headSize * 0.18, headSize * 0.14);
   ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.35, headSize * 0.18, headSize * 0.14);
 
-  // Nametag flutuante do colega
   const label = tm.name || "Colega";
-  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
   ctx.fillRect(base.x - 58, head.y - 24, 116, 17);
-  ctx.fillStyle = "#5ce1e6";
+  ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(`★ ${label.slice(0, 16)}`, base.x, head.y - 12);
@@ -1871,6 +2590,10 @@ function renderScene() {
   const targetRay = getTargetRay();
   const hitKey = targetRay && targetRay.hit ? `${targetRay.hit.x},${targetRay.hit.y},${targetRay.hit.z}` : "";
 
+  const ch = document.getElementById("crosshair");
+  if (hitKey) ch.classList.add("target-active");
+  else ch.classList.remove("target-active");
+
   const renderList = [];
   const R = 16;
 
@@ -1949,7 +2672,7 @@ function renderScene() {
 
         ctx.font = "bold 12px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillStyle = "rgba(0,0,0,0.65)";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(base.x - 68, base.y - 38, 136, 18);
         ctx.fillStyle = "#fff";
         ctx.fillText(zn.name, base.x, base.y - 25);
@@ -1988,7 +2711,7 @@ function gameLoop(now) {
   if (!gameState.started) return;
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
-  if (!invOpen && !consoleOpen) {
+  if (!gameState.paused && !invOpen && !consoleOpen) {
     updatePhysics(dt);
   }
   renderScene();
@@ -1996,22 +2719,28 @@ function gameLoop(now) {
 }
 
 // ============================================================================
-// 11. PAINEL DO PROFESSOR E EXPORTAÇÃO CSV
+// 11. ÁREA DO PROFESSOR: KPIs, FILTROS, SIMULAÇÃO E EXPORTAÇÃO CSV
 // ============================================================================
 let cachedRecords = [];
 
 async function openTeacherModal() {
+  try { document.exitPointerLock?.(); } catch (e) {}
   document.getElementById("teacher-modal").classList.remove("hidden");
   await loadTeacherRecords();
 }
 
 function closeTeacherModal() {
   document.getElementById("teacher-modal").classList.add("hidden");
+  if (gameState.started && !gameState.paused && !invOpen && !consoleOpen) {
+    try { canvas.requestPointerLock?.(); } catch (e) {}
+  }
 }
 
 async function loadTeacherRecords() {
   const tbody = document.getElementById("teacher-table-body");
-  tbody.innerHTML = "<tr><td colspan='8'>Carregando registros...</td></tr>";
+  const warnArea = document.getElementById("teacher-warn-area");
+  warnArea.innerHTML = "";
+  tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; color:#94a3b8; padding:20px;'>Carregando avaliações...</td></tr>";
 
   let map = {};
   try {
@@ -2023,31 +2752,108 @@ async function loadTeacherRecords() {
       const snap = await db.collection("avaliacoes_seliga").get();
       snap.forEach(doc => { map[doc.id] = doc.data(); });
     } catch (e) {
-      console.warn("Lendo apenas cache local:", e);
+      console.warn("Lendo cache local:", e);
+      warnArea.innerHTML = `
+        <div class="alert-banner">
+          <b>Modo de Leitura Local:</b> Os registros deste navegador foram carregados abaixo. Para sincronizar notas de outros computadores da sala de informática via Firebase, certifique-se de estar logado com <b>Entrar com Google (@escola)</b> ou libere a leitura pública na coleção <code>avaliacoes_seliga</code> do Firestore.
+        </div>
+      `;
     }
   }
 
   cachedRecords = Object.values(map);
-  if (cachedRecords.length === 0) {
-    tbody.innerHTML = "<tr><td colspan='8'>Nenhum aluno registrou atividade ainda neste dispositivo ou Firebase.</td></tr>";
+  updateTeamFilterOptions();
+  renderTeacherTable();
+}
+
+function updateTeamFilterOptions() {
+  const sel = document.getElementById("teacher-team-filter");
+  const current = sel.value;
+  const teams = [...new Set(cachedRecords.map(r => r.team).filter(Boolean))].sort();
+  sel.innerHTML = `<option value="">Todas as Equipes / Salas (${teams.length})</option>`;
+  teams.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+
+function renderTeacherTable() {
+  const tbody = document.getElementById("teacher-table-body");
+  const query = (document.getElementById("teacher-search")?.value || "").toLowerCase().trim();
+  const teamFilter = document.getElementById("teacher-team-filter")?.value || "";
+
+  const filtered = cachedRecords.filter(r => {
+    const matchesQuery = !query ||
+      (r.name || "").toLowerCase().includes(query) ||
+      (r.email || "").toLowerCase().includes(query);
+    const matchesTeam = !teamFilter || r.team === teamFilter;
+    return matchesQuery && matchesTeam;
+  });
+
+  // Atualiza KPIs
+  const totalStudents = filtered.length;
+  const avg = totalStudents > 0
+    ? filtered.reduce((acc, r) => acc + Number(r.totalGrade || 0), 0) / totalStudents
+    : 0;
+  const maxGrade = totalStudents > 0
+    ? Math.max(...filtered.map(r => Number(r.totalGrade || 0)))
+    : 0;
+  const uniqueTeams = new Set(filtered.map(r => r.team).filter(Boolean)).size;
+
+  document.getElementById("kpi-students").textContent = totalStudents;
+  document.getElementById("kpi-avg").textContent = avg.toFixed(1);
+  document.getElementById("kpi-teams").textContent = uniqueTeams;
+  document.getElementById("kpi-max").textContent = maxGrade.toFixed(1);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center; color:#94a3b8; padding:24px;">
+          Nenhum registro encontrado. Clique em <b>"➕ Simular Aluno Teste"</b> abaixo para testar a planilha ou inicie uma partida.
+        </td>
+      </tr>
+    `;
     return;
   }
 
   tbody.innerHTML = "";
-  cachedRecords.forEach(r => {
+  filtered.sort((a, b) => Number(b.totalGrade || 0) - Number(a.totalGrade || 0));
+  filtered.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><b>${r.name || "-"}</b></td>
-      <td>${r.email || "-"}</td>
-      <td><span style="color:#5ce1e6; font-weight:700;">${r.team || "-"}</span></td>
+      <td style="color:#cbd5e1;">${r.email || "-"}</td>
+      <td><span style="color:var(--accent-cyan); font-weight:700;">${r.team || "-"}</span></td>
       <td>${Number(r.ax1 || 0).toFixed(1)}</td>
       <td>${Number(r.ax2 || 0).toFixed(1)}</td>
       <td>${Number(r.ax3 || 0).toFixed(1)}</td>
       <td>${Number(r.ax4 || 0).toFixed(1)}</td>
-      <td style="color:#ffd166; font-weight:bold;">${Number(r.totalGrade || 0).toFixed(1)}</td>
+      <td><span class="grade-pill">${Number(r.totalGrade || 0).toFixed(1)}</span></td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+function seedDemoRecord() {
+  const demoId = "aluno.teste@escola.pr.gov.br";
+  const localRecords = JSON.parse(localStorage.getItem("seliga_records") || "{}");
+  localRecords[demoId] = {
+    name: "Estudante Exemplo (Demo)",
+    email: demoId,
+    team: "8B-EQUIPE-ALPHA",
+    seed: "ECA1988",
+    ax1: 2.7,
+    ax2: 2.0,
+    ax3: 2.5,
+    ax4: 1.8,
+    totalGrade: 9.0,
+    updatedAt: new Date().toISOString()
+  };
+  localStorage.setItem("seliga_records", JSON.stringify(localRecords));
+  loadTeacherRecords();
 }
 
 function exportGradesCSV() {
@@ -2071,7 +2877,7 @@ function exportGradesCSV() {
   const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "notas_seliga_equipes.csv";
+  a.download = `notas_seliga_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
 }
 </script>
