@@ -945,6 +945,17 @@
     <input type="text" id="console-input" placeholder="Comando (ex: /fill 3 2 3 oak_planks | /tp 0 4 -14 | /give torch 8 | /time set day)">
   </div>
 
+  <!-- Minimapa / Radar da Equipe (Canto Inferior Direito) -->
+  <div id="minimap-box" style="position:fixed; bottom:16px; right:16px; background:rgba(9,14,26,0.88); backdrop-filter:blur(8px); border:1px solid rgba(56,189,248,0.45); border-radius:14px; padding:10px; z-index:20; pointer-events:auto; box-shadow:0 12px 30px rgba(0,0,0,0.65); text-align:center;">
+    <div style="font-size:10px; font-weight:800; color:#38bdf8; letter-spacing:0.6px; text-transform:uppercase; margin-bottom:6px;">
+      🗺️ Mapa da Sala & Equipe
+    </div>
+    <canvas id="minimapCanvas" width="164" height="164" style="width:164px; height:164px; border-radius:8px; border:1px solid rgba(148,163,184,0.25); background:#1e293b; cursor:pointer;" title="Clique em qualquer ponto do mapa para teleportar!"></canvas>
+    <div style="font-size:9.5px; color:#94a3b8; margin-top:5px;">
+      Clique no mapa para teleportar
+    </div>
+  </div>
+
   <!-- Barra Inferior (Vida, Fome, Hotbar) -->
   <div id="bottom-hud">
     <div class="bars-row">
@@ -1505,6 +1516,14 @@ function teleportToTeammate(key) {
 
 function applyIncomingRoomData(data) {
   if (!data) return;
+  // Compatibilidade com chaves aninhadas e chaves literais com ponto
+  const incomingEdits = { ...(data.edits || {}) };
+  const incomingPlayers = { ...(data.players || {}) };
+  for (const [k, v] of Object.entries(data)) {
+    if (k.startsWith("edits.")) incomingEdits[k.slice(6)] = v;
+    if (k.startsWith("players.")) incomingPlayers[k.slice(8)] = v;
+  }
+  data = { ...data, edits: incomingEdits, players: incomingPlayers };
   if (data.edits) {
     let changed = false;
     for (const [k, val] of Object.entries(data.edits)) {
@@ -1582,23 +1601,27 @@ async function flushTeamUpdates() {
   const safeEmailKey = gameState.studentEmail.replace(/\./g, "_");
   const colorIdx = Math.abs(hashSeed(gameState.studentEmail)) % TEAM_COLORS.length;
 
+  const playerPayload = {
+    name: gameState.studentName,
+    email: gameState.studentEmail,
+    x: Number(gameState.player.x.toFixed(2)),
+    y: Number(gameState.player.y.toFixed(2)),
+    z: Number(gameState.player.z.toFixed(2)),
+    yaw: Number(gameState.player.yaw.toFixed(2)),
+    color: TEAM_COLORS[colorIdx],
+    lastSeen: Date.now()
+  };
+
   const updateObj = {
     teamName: gameState.studentTeam,
     seed: gameState.seed,
-    [`players.${safeEmailKey}`]: {
-      name: gameState.studentName,
-      email: gameState.studentEmail,
-      x: Number(gameState.player.x.toFixed(2)),
-      y: Number(gameState.player.y.toFixed(2)),
-      z: Number(gameState.player.z.toFixed(2)),
-      yaw: Number(gameState.player.yaw.toFixed(2)),
-      color: TEAM_COLORS[colorIdx],
-      lastSeen: Date.now()
+    players: {
+      [safeEmailKey]: playerPayload
     }
   };
 
-  for (const [k, v] of Object.entries(pendingBlockUpdates)) {
-    updateObj[`edits.${k}`] = v;
+  if (Object.keys(pendingBlockUpdates).length > 0) {
+    updateObj.edits = { ...pendingBlockUpdates };
   }
   pendingBlockUpdates = {};
 
@@ -2624,39 +2647,67 @@ function drawVoxelMob(m) {
 
 function drawTeammateAvatar(tm) {
   const base = projectPoint(tm.x, tm.y - 0.5, tm.z);
-  const head = projectPoint(tm.x, tm.y + 1.25, tm.z);
+  const head = projectPoint(tm.x, tm.y + 1.35, tm.z);
+  const beaconTop = projectPoint(tm.x, tm.y + 8.0, tm.z);
   if (!base || !head) return;
 
-  const h = Math.abs(base.y - head.y);
-  const w = h * 0.48;
+  const h = Math.max(18, Math.abs(base.y - head.y));
+  const w = h * 0.52;
+  const dist = Math.round(Math.hypot((tm.x || 0) - gameState.player.x, (tm.z || 0) - gameState.player.z));
 
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  // Feixe luminoso sutil acima do colega para localizá-lo facilmente no mapa
+  if (beaconTop) {
+    const bGrad = ctx.createLinearGradient(0, head.y, 0, beaconTop.y);
+    bGrad.addColorStop(0, (tm.color || "#38bdf8") + "66");
+    bGrad.addColorStop(1, (tm.color || "#38bdf8") + "00");
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(base.x - Math.max(4, w * 0.2), beaconTop.y, Math.max(8, w * 0.4), head.y - beaconTop.y);
+  }
+
+  // Sombra no chão
+  ctx.fillStyle = "rgba(0,0,0,0.4)";
   ctx.beginPath();
-  ctx.ellipse(base.x, base.y, w * 0.65, w * 0.25, 0, 0, Math.PI * 2);
+  ctx.ellipse(base.x, base.y, w * 0.7, w * 0.26, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Pernas (calça azul estilo Steve)
+  ctx.fillStyle = "#1d4ed8";
+  ctx.fillRect(base.x - w * 0.34, head.y + h * 0.64, w * 0.31, h * 0.36);
+  ctx.fillRect(base.x + w * 0.03, head.y + h * 0.64, w * 0.31, h * 0.36);
+
+  // Tronco e braços com a cor da equipe
   ctx.fillStyle = tm.color || "#38bdf8";
-  ctx.fillRect(base.x - w * 0.38, head.y + h * 0.32, w * 0.76, h * 0.68);
+  ctx.fillRect(base.x - w * 0.55, head.y + h * 0.32, w * 1.1, h * 0.34);
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.4;
-  ctx.strokeRect(base.x - w * 0.38, head.y + h * 0.32, w * 0.76, h * 0.68);
+  ctx.strokeRect(base.x - w * 0.36, head.y + h * 0.32, w * 0.72, h * 0.34);
 
-  const headSize = w * 0.85;
+  // Cabeça
+  const headSize = w * 0.86;
   ctx.fillStyle = "#f1c27d";
   ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize);
   ctx.strokeRect(base.x - headSize / 2, head.y, headSize, headSize);
 
+  // Cabelo e olhos
+  ctx.fillStyle = "#3f2e21";
+  ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize * 0.24);
   ctx.fillStyle = "#1e293b";
-  ctx.fillRect(base.x - headSize * 0.28, head.y + headSize * 0.35, headSize * 0.18, headSize * 0.14);
-  ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.35, headSize * 0.18, headSize * 0.14);
+  ctx.fillRect(base.x - headSize * 0.28, head.y + headSize * 0.42, headSize * 0.18, headSize * 0.16);
+  ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.42, headSize * 0.18, headSize * 0.16);
 
-  const label = tm.name || "Colega";
-  ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
-  ctx.fillRect(base.x - 58, head.y - 24, 116, 17);
-  ctx.fillStyle = "#38bdf8";
+  // Nametag destacada com distância
+  const label = `${(tm.name || "Colega").split(" ")[0]} (${dist}m)`;
+  ctx.fillStyle = "rgba(9, 14, 26, 0.88)";
+  ctx.strokeStyle = tm.color || "#38bdf8";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(base.x - 64, head.y - 26, 128, 19, 6);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
   ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(`★ ${label.slice(0, 16)}`, base.x, head.y - 12);
+  ctx.fillText(`★ ${label}`, base.x, head.y - 13);
 }
 
 function drawFirstPersonHand() {
@@ -2951,6 +3002,7 @@ function renderScene() {
   });
 
   drawFirstPersonHand();
+  renderMinimap();
 
   // Indicador direcional na tela para colegas fora do campo de visão
   Object.values(gameState.teammates).forEach(tm => {
@@ -2993,6 +3045,109 @@ function renderScene() {
 }
 
 let lastTime = performance.now();
+
+const minimapCanvas = document.getElementById("minimapCanvas");
+const mCtx = minimapCanvas ? minimapCanvas.getContext("2d") : null;
+
+if (minimapCanvas) {
+  minimapCanvas.addEventListener("click", (e) => {
+    const rect = minimapCanvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    // Converte coordenada 0..164 para mundo -36..+36
+    const wx = ((cx / 164) * 72) - 36;
+    const wz = ((cy / 164) * 72) - 36;
+    gameState.player.x = Math.max(-35, Math.min(35, wx));
+    gameState.player.z = Math.max(-35, Math.min(35, wz));
+    gameState.player.y = 3.0;
+    SoundFX.command();
+    addChat(`Teleportado pelo mapa para X: ${Math.round(wx)}, Z: ${Math.round(wz)}`);
+  });
+}
+
+function renderMinimap() {
+  if (!mCtx) return;
+  const W = 164, H = 164;
+  const toMapX = (wx) => ((wx + 36) / 72) * W;
+  const toMapY = (wz) => ((wz + 36) / 72) * H;
+
+  // Fundo gramado
+  mCtx.fillStyle = "#2d5a27";
+  mCtx.fillRect(0, 0, W, H);
+
+  // Estradas de pedra e Praça Central
+  mCtx.fillStyle = "#64748b";
+  const cx = toMapX(0), cy = toMapY(0);
+  mCtx.fillRect(cx - 3, toMapY(-22), 6, toMapY(22) - toMapY(-22));
+  mCtx.fillRect(toMapX(-22), cy - 3, toMapX(22) - toMapX(-22), 6);
+  mCtx.beginPath();
+  mCtx.arc(cx, cy, (9 / 72) * W, 0, Math.PI * 2);
+  mCtx.fill();
+
+  // Blocos construídos pelos jogadores (edits)
+  for (const [key, type] of Object.entries(gameState.teamEdits)) {
+    if (!type || type === "AIR") continue;
+    const [bx, , bz] = key.split(",").map(Number);
+    const info = BLOCK_TYPES[type];
+    mCtx.fillStyle = info ? info.color : "#fbbf24";
+    mCtx.fillRect(toMapX(bx) - 1.5, toMapY(bz) - 1.5, 3, 3);
+  }
+
+  // 4 Zonas do ECA
+  ZONES.forEach(zn => {
+    const zx = toMapX(zn.x), zy = toMapY(zn.z);
+    mCtx.fillStyle = zn.color + "55";
+    mCtx.strokeStyle = zn.color;
+    mCtx.lineWidth = 1.5;
+    mCtx.beginPath();
+    mCtx.arc(zx, zy, (zn.r / 72) * W, 0, Math.PI * 2);
+    mCtx.fill();
+    mCtx.stroke();
+
+    mCtx.fillStyle = "#ffffff";
+    mCtx.font = "bold 8px sans-serif";
+    mCtx.textAlign = "center";
+    mCtx.fillText(zn.id.toUpperCase(), zx, zy + 3);
+  });
+
+  // Colegas da Equipe (pontos destacados com nome)
+  Object.values(gameState.teammates).forEach(tm => {
+    const tx = toMapX(tm.x || 0);
+    const ty = toMapY(tm.z || 0);
+    mCtx.fillStyle = tm.color || "#38bdf8";
+    mCtx.strokeStyle = "#ffffff";
+    mCtx.lineWidth = 1.5;
+    mCtx.beginPath();
+    mCtx.arc(tx, ty, 4.5, 0, Math.PI * 2);
+    mCtx.fill();
+    mCtx.stroke();
+
+    mCtx.fillStyle = "#ffffff";
+    mCtx.font = "bold 8.5px sans-serif";
+    mCtx.textAlign = "center";
+    mCtx.fillText((tm.name || "Colega").split(" ")[0], tx, ty - 6);
+  });
+
+  // Jogador Local (seta direcional branca)
+  const px = toMapX(gameState.player.x);
+  const py = toMapY(gameState.player.z);
+  mCtx.save();
+  mCtx.translate(px, py);
+  mCtx.rotate(-gameState.player.yaw);
+  mCtx.fillStyle = "#ffffff";
+  mCtx.strokeStyle = "#0f172a";
+  mCtx.lineWidth = 1.2;
+  mCtx.beginPath();
+  mCtx.moveTo(0, 6);
+  mCtx.lineTo(-4.5, -5);
+  mCtx.lineTo(0, -2.5);
+  mCtx.lineTo(4.5, -5);
+  mCtx.closePath();
+  mCtx.fill();
+  mCtx.stroke();
+  mCtx.restore();
+}
+
 function gameLoop(now) {
   if (!gameState.started) return;
   const dt = Math.min(0.05, (now - lastTime) / 1000);
