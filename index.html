@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+html_code = r'''<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoxelCraft Studio — Edição Mundos, ECA & Avaliação Se Liga</title>
+<title>VoxelCraft Studio — Multiplayer Equipes, ECA & Avaliação Se Liga</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap');
 
@@ -25,7 +25,7 @@
     background: linear-gradient(145deg, #1b2434, #131a26);
     border: 2px solid #3c4d6b;
     border-radius: 14px;
-    padding: 26px; max-width: 820px; width: 100%;
+    padding: 26px; max-width: 840px; width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.08);
   }
   .pixel-title {
@@ -93,15 +93,15 @@
   /* Painel de Nota e Missão ao Vivo */
   #grade-hud {
     position: fixed; top: 14px; left: 14px;
-    background: rgba(12, 17, 26, 0.82); backdrop-filter: blur(6px);
+    background: rgba(12, 17, 26, 0.84); backdrop-filter: blur(6px);
     border: 2px solid rgba(92, 225, 230, 0.35); border-radius: 10px;
-    padding: 12px 14px; width: 280px; pointer-events: auto;
+    padding: 12px 14px; width: 285px; pointer-events: auto;
     box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   }
-  .grade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .grade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
   .grade-title { font-size: 11px; font-weight: 800; color: #5ce1e6; text-transform: uppercase; letter-spacing: 0.6px; }
   .grade-score { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #ffd166; text-shadow: 0 2px 0 #000; }
-  .axis-row { margin-top: 7px; font-size: 11px; }
+  .axis-row { margin-top: 6px; font-size: 11px; }
   .axis-label { display: flex; justify-content: space-between; color: #e2e8f0; margin-bottom: 3px; font-weight: 600; }
   .bar-bg { width: 100%; height: 7px; background: #1e293b; border-radius: 4px; overflow: hidden; border: 1px solid #334155; }
   .bar-fill { height: 100%; background: linear-gradient(90deg, #2ec4b6, #5ce1e6); width: 0%; transition: width 0.3s; }
@@ -144,20 +144,24 @@
     font-weight: 800; color: #fff; text-shadow: 1px 1px 0 #000;
   }
 
-  /* Direitos ECA Checklist (Canto Superior Direito) */
+  /* Direitos ECA & Equipe Online (Canto Superior Direito) */
   #eca-hud {
     position: fixed; top: 14px; right: 14px;
-    background: rgba(12, 17, 26, 0.82); backdrop-filter: blur(6px);
+    background: rgba(12, 17, 26, 0.84); backdrop-filter: blur(6px);
     border: 2px solid rgba(255, 209, 102, 0.35); border-radius: 10px;
-    padding: 12px 14px; width: 265px; font-size: 12px;
+    padding: 12px 14px; width: 275px; font-size: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   }
   #eca-hud h4 { color: #ffd166; margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800; }
-  .eca-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 600; }
+  .eca-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 600; }
+  .team-online-box {
+    margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(92, 225, 230, 0.35);
+    font-size: 11px; color: #74c69d;
+  }
 
   /* F3 Debug & Console */
   #f3-panel {
-    position: fixed; top: 222px; left: 14px; background: rgba(0,0,0,0.62);
+    position: fixed; top: 230px; left: 14px; background: rgba(0,0,0,0.62);
     backdrop-filter: blur(4px);
     padding: 8px 10px; border-radius: 6px; font-family: monospace; font-size: 11px;
     color: #a3e635; line-height: 1.45; border-left: 3px solid #84cc16;
@@ -206,11 +210,11 @@
 
 <canvas id="gameCanvas"></canvas>
 
-<!-- TELA INICIAL: LOGIN @ESCOLA + GERENCIADOR DE MUNDOS -->
+<!-- TELA INICIAL: LOGIN @ESCOLA + SALA DE EQUIPE MULTIPLAYER -->
 <div id="start-screen" class="overlay">
   <div class="card">
     <div class="pixel-title">VOXELCRAFT STUDIO</div>
-    <p class="subtitle">Edição Shaders HD — Construa os 4 Direitos Fundamentais (ECA & CF/88), programe com comandos e registre sua avaliação.</p>
+    <p class="subtitle">Edição Multiplayer por Equipes & Shaders HD — Construam juntos os 4 Direitos Fundamentais (ECA & CF/88) no mesmo mundo em tempo real.</p>
 
     <div class="grid-2">
       <!-- Bloco 1: Identificação e Firebase @escola -->
@@ -227,20 +231,20 @@
         <label>E-mail Institucional (@escola):</label>
         <input type="email" id="student-email" placeholder="ana.souza@escola.pr.gov.br">
 
-        <label>Turma / Equipe:</label>
-        <input type="text" id="student-team" placeholder="Ex: 8º Ano B - Equipe Alpha" value="Turma Se Liga">
+        <label>Código da Sala / Equipe (Para jogar juntos):</label>
+        <input type="text" id="student-team" placeholder="Ex: 8B-EQUIPE1" value="EQUIPE-ALPHA">
       </div>
 
       <!-- Bloco 2: Mundo, Seed e Arquivos -->
       <div class="box">
-        <h3>2. Mundo & Arquivos (.voxelworld)</h3>
-        <label>Seed do Mundo (Geração Procedural):</label>
+        <h3>2. Mundo Compartilhado & Arquivos</h3>
+        <label>Seed do Mundo (Base do Terreno):</label>
         <input type="text" id="world-seed" value="ECA1988">
 
         <label>Modo de Jogo:</label>
         <select id="game-mode">
-          <option value="survival">Sobrevivência (Mineração, Crafting & Desafios)</option>
-          <option value="creative">Criativo (Blocos Infinitos & Construção Livre)</option>
+          <option value="survival">Sobrevivência Cooperativa (Mineração & Crafting)</option>
+          <option value="creative">Criativo Cooperativo (Blocos Infinitos)</option>
         </select>
 
         <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
@@ -255,7 +259,7 @@
     </div>
 
     <button class="btn btn-primary" onclick="startGame()">
-      ▶ INICIAR MISSÃO E ENTRAR NO MUNDO 3D
+      ▶ ENTRAR NA SALA DA EQUIPE E MUNDO 3D
     </button>
   </div>
 </div>
@@ -264,16 +268,17 @@
 <div id="hud" class="hidden">
   <div id="crosshair"></div>
 
-  <!-- Painel de Nota Individual Automática (0 a 10) -->
+  <!-- Painel de Nota Individual + Equipe ao Vivo (0 a 10) -->
   <div id="grade-hud">
     <div class="grade-header">
-      <span class="grade-title">Avaliação Individual</span>
+      <span class="grade-title">Nota (Equipe + Individual)</span>
       <span class="grade-score" id="live-grade">0.0/10</span>
     </div>
-    <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;" id="hud-student-info">Aluno: ---</div>
+    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;" id="hud-student-info">Aluno: ---</div>
+    <div style="font-size:11px; color:#5ce1e6; font-weight:700; margin-bottom:6px;" id="hud-team-info">Sala: ---</div>
 
     <div class="axis-row">
-      <div class="axis-label"><span>1. Cidadania / ECA (3.0)</span><span id="ax1-val">0.0</span></div>
+      <div class="axis-label"><span>1. Cidadania Equipe (3.0)</span><span id="ax1-val">0.0</span></div>
       <div class="bar-bg"><div class="bar-fill" id="ax1-bar"></div></div>
     </div>
     <div class="axis-row">
@@ -290,24 +295,27 @@
     </div>
   </div>
 
-  <!-- Checklist dos 4 Direitos Constitucionais -->
+  <!-- Checklist dos 4 Direitos Constitucionais + Colegas Online -->
   <div id="eca-hud">
-    <h4>Direitos Constitucionais (CF/88)</h4>
+    <h4>Direitos da Equipe (CF/88)</h4>
     <div class="eca-item"><span>📘 Educação (Escola Norte)</span><span id="st-edu">0/4</span></div>
     <div class="eca-item"><span>🎭 Cultura (Cinema Sul)</span><span id="st-cul">0/4</span></div>
     <div class="eca-item"><span>⚽ Esporte (Estádio Leste)</span><span id="st-esp">0/4</span></div>
     <div class="eca-item"><span>🌳 Lazer (Praça Oeste)</span><span id="st-laz">0/4</span></div>
-    <div style="margin-top:8px; font-size:10px; color:#cbd5e1; line-height:1.35;">
+    <div class="team-online-box" id="team-online-list">
+      👥 Colegas na sala: conectando...
+    </div>
+    <div style="margin-top:6px; font-size:10px; color:#cbd5e1; line-height:1.35;">
       <b>Controles:</b> WASD andar | Shift correr | Espaço pular | Esq. minerar/atacar | Dir. ou Q construir | E crafting | / comandos
     </div>
   </div>
 
   <!-- F3 Debug -->
   <div id="f3-panel">
-    VoxelCraft Shaders 2.0 (Pixel Art 3D)<br>
+    VoxelCraft Multiplayer 2.1 (Sync Real-Time)<br>
     XYZ: <span id="f3-xyz">0, 0, 0</span> | Zona: <span id="f3-zone">Centro</span><br>
     Modo: <span id="f3-mode">Survival</span> | Hora: <span id="f3-time">Dia</span><br>
-    Sync Firebase: <span id="f3-sync">Aguardando...</span>
+    Sync Sala: <span id="f3-sync">Aguardando...</span>
   </div>
 
   <div id="chat-log"></div>
@@ -346,9 +354,9 @@
 
 <!-- MODAL PAINEL DO PROFESSOR -->
 <div id="teacher-modal" class="hidden">
-  <div class="card" style="max-width:860px;">
+  <div class="card" style="max-width:880px;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="color:#5ce1e6; font-size:18px;">Painel de Avaliação Individual — Se Liga (0,0 a 10,0)</h2>
+      <h2 style="color:#5ce1e6; font-size:18px;">Painel de Avaliação por Equipe e Aluno — Se Liga (0,0 a 10,0)</h2>
       <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 14px;" onclick="closeTeacherModal()">Fechar</button>
     </div>
     <p style="font-size:12px; color:#a8b8d0; margin-top:4px;">
@@ -360,7 +368,7 @@
           <tr>
             <th>Aluno</th>
             <th>E-mail (@escola)</th>
-            <th>Turma</th>
+            <th>Equipe / Sala</th>
             <th>Cidadania (3.0)</th>
             <th>Crafting (2.5)</th>
             <th>Código / (2.5)</th>
@@ -460,7 +468,6 @@ function createPixelTexture(drawFn) {
 function initTextures() {
   const rand = (x, y, s) => Math.abs(Math.sin(x * 12.9898 + y * 78.233 + s) * 43758.5453) % 1;
 
-  // Grama Topo
   TEXTURE_CACHE.grass_top = createPixelTexture(g => {
     const greens = ["#59a638", "#65b842", "#4e9630", "#73c94e"];
     for (let y = 0; y < 16; y++) {
@@ -471,7 +478,6 @@ function initTextures() {
     }
   });
 
-  // Terra
   TEXTURE_CACHE.dirt = createPixelTexture(g => {
     const browns = ["#866043", "#79553a", "#966c4a", "#6b4a32"];
     for (let y = 0; y < 16; y++) {
@@ -482,7 +488,6 @@ function initTextures() {
     }
   });
 
-  // Grama Lateral (Terra + Borda de Grama caindo)
   TEXTURE_CACHE.grass_side = createPixelTexture(g => {
     g.drawImage(TEXTURE_CACHE.dirt, 0, 0);
     const greens = ["#59a638", "#65b842", "#4e9630"];
@@ -495,7 +500,6 @@ function initTextures() {
     }
   });
 
-  // Pedra
   TEXTURE_CACHE.stone = createPixelTexture(g => {
     const grays = ["#7d7d7d", "#8a8a8a", "#6e6e6e", "#969696"];
     for (let y = 0; y < 16; y++) {
@@ -506,7 +510,6 @@ function initTextures() {
     }
   });
 
-  // Tronco de Madeira
   TEXTURE_CACHE.wood = createPixelTexture(g => {
     for (let x = 0; x < 16; x++) {
       const col = x % 4 === 0 ? "#4a3520" : (x % 2 === 0 ? "#66492c" : "#593f25");
@@ -517,7 +520,6 @@ function initTextures() {
     }
   });
 
-  // Tábuas de Carvalho
   TEXTURE_CACHE.oak_planks = createPixelTexture(g => {
     g.fillStyle = "#b88a4c";
     g.fillRect(0, 0, 16, 16);
@@ -535,7 +537,6 @@ function initTextures() {
     g.fillRect(11, 12, 1, 4);
   });
 
-  // Folhas (Leaves)
   TEXTURE_CACHE.leaves = createPixelTexture(g => {
     const greens = ["#2d6a27", "#3a8232", "#1e4d1a", "#48993e"];
     for (let y = 0; y < 16; y++) {
@@ -546,7 +547,6 @@ function initTextures() {
     }
   });
 
-  // Tocha / Glowstone
   TEXTURE_CACHE.torch = createPixelTexture(g => {
     g.fillStyle = "#d97706";
     g.fillRect(0, 0, 16, 16);
@@ -559,7 +559,6 @@ function initTextures() {
     }
   });
 
-  // Marcos ECA (Blocos Especiais com Borda Dourada/Neon)
   const makeMonumentTex = (base, light, dark) => createPixelTexture(g => {
     g.fillStyle = dark;
     g.fillRect(0, 0, 16, 16);
@@ -579,7 +578,7 @@ function initTextures() {
 initTextures();
 
 // ============================================================================
-// 3. ESTADO DO JOGO, MÉTRICAS INDIVIDUAIS E CÁLCULO DA NOTA (0 A 10)
+// 3. ESTADO DO JOGO, EQUIPES MULTIPLAYER E CÁLCULO DA NOTA (0 A 10)
 // ============================================================================
 const BLOCK_TYPES = {
   grass:      { name: "Grama", color: "#59a638", side: "#4e9630", top: "#65b842", texTop: "grass_top", texSide: "grass_side", icon: "🟩" },
@@ -615,15 +614,20 @@ const ZONES = [
   { id: "laz", name: "Lazer (Praça)",     x: -14, z: 0, r: 5, color: "#ffbe0b" }
 ];
 
+const TEAM_COLORS = ["#38bdf8", "#f472b6", "#a3e635", "#fbbf24", "#c084fc", "#fb7185"];
+
 let gameState = {
   started: false,
   paused: false,
   studentName: "",
   studentEmail: "",
   studentTeam: "",
+  teamId: "",
   seed: "ECA1988",
   mode: "survival",
   worldBlocks: {},
+  teamEdits: {}, // Delta de blocos modificados pela equipe no Firebase
+  teammates: {}, // Avatares em tempo real dos colegas da equipe
   hotbar: [
     { type: "pickaxe", count: 1 },
     { type: "sword", count: 1 },
@@ -654,10 +658,13 @@ let gameState = {
     validCommands: {},
     mobsDefeated: 0,
     activeSeconds: 0
+  },
+  teamMetrics: {
+    zoneBlocksPlaced: 0,
+    monumentsDelivered: { edu: 0, cul: 0, esp: 0, laz: 0 }
   }
 };
 
-// Nuvens volumétricas 3D no céu
 for (let i = 0; i < 14; i++) {
   gameState.clouds.push({
     x: (Math.random() - 0.5) * 90,
@@ -670,15 +677,28 @@ for (let i = 0; i < 14; i++) {
 
 function computeGrade() {
   const m = gameState.metrics;
-  const monTotal = Object.values(m.monumentsDelivered).reduce((a, b) => a + b, 0);
-  const ax1 = Math.min(3.0, (m.zoneBlocksPlaced * 0.15) + (Math.min(3, monTotal) * 0.25));
+  const tm = gameState.teamMetrics;
 
+  // Eixo 1 (3.0 pts): Combina construção coletiva da equipe nas 4 zonas ECA + marcos entregues
+  const combinedZoneBlocks = Math.max(m.zoneBlocksPlaced, tm.zoneBlocksPlaced);
+  const combinedMon = {
+    edu: Math.max(m.monumentsDelivered.edu || 0, tm.monumentsDelivered.edu || 0),
+    cul: Math.max(m.monumentsDelivered.cul || 0, tm.monumentsDelivered.cul || 0),
+    esp: Math.max(m.monumentsDelivered.esp || 0, tm.monumentsDelivered.esp || 0),
+    laz: Math.max(m.monumentsDelivered.laz || 0, tm.monumentsDelivered.laz || 0)
+  };
+  const monTotal = Object.values(combinedMon).reduce((a, b) => a + b, 0);
+  const ax1 = Math.min(3.0, (combinedZoneBlocks * 0.12) + (Math.min(4, monTotal) * 0.30));
+
+  // Eixo 2 (2.5 pts): Mineração & Crafting individual
   const uniqueCrafted = Object.keys(m.craftedItems).length;
   const ax2 = Math.min(2.5, (Math.min(10, m.resourcesMined) * 0.10) + (Math.min(3, uniqueCrafted) * 0.50));
 
+  // Eixo 3 (2.5 pts): Programação / Comandos individuais
   const uniqueCmds = Object.keys(m.validCommands).length;
   const ax3 = Math.min(2.5, Math.min(2, uniqueCmds) * 1.25);
 
+  // Eixo 4 (2.0 pts): Defesa & Participação ativa
   const activePts = Math.min(1.0, (m.activeSeconds / 45) * 1.0);
   const mobPts = Math.min(1.0, m.mobsDefeated * 0.34);
   const ax4 = Math.min(2.0, activePts + mobPts);
@@ -689,7 +709,8 @@ function computeGrade() {
     ax2: Number(ax2.toFixed(1)),
     ax3: Number(ax3.toFixed(1)),
     ax4: Number(ax4.toFixed(1)),
-    total
+    total,
+    combinedMon
   };
 }
 
@@ -706,7 +727,7 @@ function updateGradeHUD() {
   document.getElementById("ax3-bar").style.width = ((g.ax3 / 2.5) * 100) + "%";
   document.getElementById("ax4-bar").style.width = ((g.ax4 / 2.0) * 100) + "%";
 
-  const md = gameState.metrics.monumentsDelivered;
+  const md = g.combinedMon;
   document.getElementById("st-edu").textContent = Math.min(4, md.edu) + "/4";
   document.getElementById("st-cul").textContent = Math.min(4, md.cul) + "/4";
   document.getElementById("st-esp").textContent = Math.min(4, md.esp) + "/4";
@@ -714,8 +735,117 @@ function updateGradeHUD() {
 }
 
 // ============================================================================
-// 4. SINCRONIZAÇÃO AUTOMÁTICA (LOCALSTORAGE + CLOUD FIRESTORE)
+// 4. SINCRONIZAÇÃO MULTIPLAYER DA EQUIPE EM TEMPO REAL (FIRESTORE)
 // ============================================================================
+let unsubRoom = null;
+let pendingBlockUpdates = {};
+
+function sanitizeTeamId(raw) {
+  return (raw || "EQUIPE-GERAL").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "_");
+}
+
+function startTeamRealtimeSync() {
+  if (!firebaseReady || !db || !gameState.teamId) return;
+
+  const roomRef = db.collection("salas_equipes_seliga").doc(gameState.teamId);
+
+  unsubRoom = roomRef.onSnapshot((doc) => {
+    if (!doc.exists) return;
+    const data = doc.data() || {};
+
+    // 1. Aplica blocos construídos ou minerados pelos colegas da equipe
+    if (data.edits) {
+      let changed = false;
+      for (const [k, val] of Object.entries(data.edits)) {
+        if (gameState.teamEdits[k] !== val) {
+          gameState.teamEdits[k] = val;
+          if (val === "AIR") delete gameState.worldBlocks[k];
+          else gameState.worldBlocks[k] = val;
+          changed = true;
+        }
+      }
+      if (changed) recalcTeamZoneMetrics();
+    }
+
+    // 2. Atualiza posições e avatares dos colegas da equipe
+    if (data.players) {
+      const now = Date.now();
+      const activeMates = {};
+      const names = [];
+      for (const [emailKey, pInfo] of Object.entries(data.players)) {
+        if (pInfo.email === gameState.studentEmail) continue;
+        if (now - (pInfo.lastSeen || 0) < 30000) {
+          activeMates[emailKey] = pInfo;
+          names.push(pInfo.name.split(" ")[0]);
+        }
+      }
+      gameState.teammates = activeMates;
+      const box = document.getElementById("team-online-list");
+      if (names.length > 0) {
+        box.textContent = `👥 Online na equipe (${names.length + 1}): Você, ${names.join(", ")}`;
+      } else {
+        box.textContent = `👥 Sala ${gameState.studentTeam}: aguardando colegas entrarem...`;
+      }
+    }
+  }, (err) => {
+    console.warn("Listener sala:", err);
+  });
+}
+
+function recalcTeamZoneMetrics() {
+  let zBlocks = 0;
+  const mon = { edu: 0, cul: 0, esp: 0, laz: 0 };
+  for (const [key, type] of Object.entries(gameState.teamEdits)) {
+    if (!type || type === "AIR") continue;
+    const [x, y, z] = key.split(",").map(Number);
+    const zone = ZONES.find(zn => Math.hypot(x - zn.x, z - zn.z) <= zn.r);
+    if (zone) {
+      zBlocks++;
+      const info = BLOCK_TYPES[type];
+      if (info && info.monument === zone.id) {
+        mon[zone.id]++;
+      }
+    }
+  }
+  gameState.teamMetrics.zoneBlocksPlaced = zBlocks;
+  gameState.teamMetrics.monumentsDelivered = mon;
+  updateGradeHUD();
+}
+
+async function flushTeamUpdates() {
+  if (!firebaseReady || !db || !gameState.started) return;
+  const roomRef = db.collection("salas_equipes_seliga").doc(gameState.teamId);
+  const safeEmailKey = gameState.studentEmail.replace(/\./g, "_");
+  const colorIdx = Math.abs(hashSeed(gameState.studentEmail)) % TEAM_COLORS.length;
+
+  const updateObj = {
+    teamName: gameState.studentTeam,
+    seed: gameState.seed,
+    [`players.${safeEmailKey}`]: {
+      name: gameState.studentName,
+      email: gameState.studentEmail,
+      x: Number(gameState.player.x.toFixed(2)),
+      y: Number(gameState.player.y.toFixed(2)),
+      z: Number(gameState.player.z.toFixed(2)),
+      yaw: Number(gameState.player.yaw.toFixed(2)),
+      color: TEAM_COLORS[colorIdx],
+      lastSeen: Date.now()
+    }
+  };
+
+  for (const [k, v] of Object.entries(pendingBlockUpdates)) {
+    updateObj[`edits.${k}`] = v;
+  }
+  pendingBlockUpdates = {};
+
+  try {
+    await roomRef.set(updateObj, { merge: true });
+    document.getElementById("f3-sync").textContent = "Equipe Sync OK (" + new Date().toLocaleTimeString() + ")";
+  } catch (e) {
+    document.getElementById("f3-sync").textContent = "Sync Local (Verifique Login @escola)";
+  }
+}
+
 async function syncToFirebase(manual = false) {
   if (!gameState.started) return;
   const g = computeGrade();
@@ -742,17 +872,23 @@ async function syncToFirebase(manual = false) {
   if (firebaseReady && db) {
     try {
       await db.collection("avaliacoes_seliga").doc(gameState.studentEmail).set(payload, { merge: true });
-      document.getElementById("f3-sync").textContent = "Cloud OK (" + new Date().toLocaleTimeString() + ")";
-      if (manual) addChat("Nota (" + g.total.toFixed(1) + ") enviada com sucesso ao Firebase!");
+      if (manual) addChat("Nota (" + g.total.toFixed(1) + ") enviada com sucesso ao Professor!");
     } catch (e) {
-      document.getElementById("f3-sync").textContent = "Erro Cloud (Salvo Local)";
+      if (manual) addChat("Aviso: Entre com o botão Google (@escola) para gravar na nuvem.");
     }
-  } else {
-    document.getElementById("f3-sync").textContent = "Local OK (" + new Date().toLocaleTimeString() + ")";
-    if (manual) addChat("Progresso salvo localmente! Nota atual: " + g.total.toFixed(1));
+  } else if (manual) {
+    addChat("Progresso salvo localmente! Nota atual: " + g.total.toFixed(1));
   }
 }
 
+// Sincroniza posição e blocos da equipe a cada 2.5 segundos
+setInterval(() => {
+  if (gameState.started && !gameState.paused) {
+    flushTeamUpdates();
+  }
+}, 2500);
+
+// Contabiliza participação e envia nota do aluno a cada 10 segundos
 setInterval(() => {
   if (gameState.started && !gameState.paused) {
     gameState.metrics.activeSeconds += 1;
@@ -785,44 +921,53 @@ function generateWorld(seedStr) {
 
       for (let y = -1; y <= h; y++) {
         let type = y === h ? "grass" : (y >= h - 1 ? "dirt" : "stone");
-        setBlock(x, y, z, type);
+        setBlock(x, y, z, type, false);
       }
 
-      // Plataformas de destaque nas 4 Zonas Constitucionais
       ZONES.forEach(zn => {
         if (Math.abs(x - zn.x) <= 2 && Math.abs(z - zn.z) <= 2) {
-          setBlock(x, 0, z, "oak_planks");
+          setBlock(x, 0, z, "oak_planks", false);
         }
       });
 
       if (!nearZone && Math.hypot(x, z) > 4) {
         const r = Math.abs(Math.sin(x * 12.9898 + z * 78.233 + seedNum)) % 1;
         if (r < 0.028) {
-          // Árvore estilo Minecraft
-          setBlock(x, h + 1, z, "wood");
-          setBlock(x, h + 2, z, "wood");
-          setBlock(x, h + 3, z, "wood");
+          setBlock(x, h + 1, z, "wood", false);
+          setBlock(x, h + 2, z, "wood", false);
+          setBlock(x, h + 3, z, "wood", false);
           for (let lx = -1; lx <= 1; lx++) {
             for (let lz = -1; lz <= 1; lz++) {
-              setBlock(x + lx, h + 3, z + lz, "leaves");
+              setBlock(x + lx, h + 3, z + lz, "leaves", false);
               if (Math.abs(lx) + Math.abs(lz) <= 1) {
-                setBlock(x + lx, h + 4, z + lz, "leaves");
+                setBlock(x + lx, h + 4, z + lz, "leaves", false);
               }
             }
           }
-          setBlock(x, h + 3, z, "wood");
+          setBlock(x, h + 3, z, "wood", false);
         } else if (r > 0.975) {
-          setBlock(x, h + 1, z, "stone");
+          setBlock(x, h + 1, z, "stone", false);
         }
       }
     }
   }
 }
 
-function setBlock(x, y, z, type) {
+function setBlock(x, y, z, type, broadcast = true) {
   const k = `${Math.round(x)},${Math.round(y)},${Math.round(z)}`;
-  if (!type) delete gameState.worldBlocks[k];
-  else gameState.worldBlocks[k] = type;
+  if (!type) {
+    delete gameState.worldBlocks[k];
+    if (broadcast) {
+      gameState.teamEdits[k] = "AIR";
+      pendingBlockUpdates[k] = "AIR";
+    }
+  } else {
+    gameState.worldBlocks[k] = type;
+    if (broadcast) {
+      gameState.teamEdits[k] = type;
+      pendingBlockUpdates[k] = type;
+    }
+  }
 }
 
 function getBlock(x, y, z) {
@@ -831,7 +976,7 @@ function getBlock(x, y, z) {
 
 function exportWorldFile() {
   const data = {
-    format: "voxelworld-seliga-v1",
+    format: "voxelworld-seliga-v2-team",
     student: { name: gameState.studentName, email: gameState.studentEmail, team: gameState.studentTeam },
     seed: gameState.seed,
     grade: computeGrade(),
@@ -841,9 +986,9 @@ function exportWorldFile() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `mundo_${(gameState.studentName || "aluno").replace(/\s+/g, "_")}.voxelworld`;
+  a.download = `mundo_${(gameState.studentTeam || "equipe").replace(/\s+/g, "_")}.voxelworld`;
   a.click();
-  addChat("Arquivo .voxelworld exportado com sucesso!");
+  addChat("Arquivo .voxelworld da equipe exportado com sucesso!");
 }
 
 function importWorldFile(e) {
@@ -888,13 +1033,14 @@ function startGame() {
   const team = document.getElementById("student-team").value.trim();
 
   if (!name || !email.includes("@escola")) {
-    alert("Por favor, informe seu Nome Completo e um e-mail institucional válido contendo '@escola' para registrar sua avaliação individual.");
+    alert("Por favor, informe seu Nome Completo e um e-mail institucional válido contendo '@escola' para registrar sua avaliação.");
     return;
   }
 
   gameState.studentName = name;
   gameState.studentEmail = email;
-  gameState.studentTeam = team || "Se Liga";
+  gameState.studentTeam = team || "EQUIPE-ALPHA";
+  gameState.teamId = sanitizeTeamId(gameState.studentTeam);
   gameState.seed = document.getElementById("world-seed").value.trim() || "ECA1988";
   gameState.mode = document.getElementById("game-mode").value;
 
@@ -908,12 +1054,17 @@ function startGame() {
   updateGradeHUD();
 
   document.getElementById("hud-student-info").textContent = `${name} (${email})`;
+  document.getElementById("hud-team-info").textContent = `Sala da Equipe: ${gameState.studentTeam}`;
   document.getElementById("f3-mode").textContent = gameState.mode.toUpperCase();
   document.getElementById("start-screen").classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
   gameState.started = true;
 
-  addChat("Bem-vindo(a), " + name + "! Use /fill, /tp ou /give para ganhar pontos de programação!");
+  // Inicia sincronização multiplayer com a equipe
+  startTeamRealtimeSync();
+  flushTeamUpdates();
+
+  addChat(`Você entrou na sala '${gameState.studentTeam}'! Colegas com o mesmo código constroem juntos!`);
   try {
     canvas.requestPointerLock?.();
   } catch (err) {}
@@ -1084,7 +1235,7 @@ function executeCommand(raw) {
     for (let ix = 0; ix < dx; ix++) {
       for (let iy = 0; iy < dy; iy++) {
         for (let iz = 0; iz < dz; iz++) {
-          setBlock(sx + ix, sy + iy, sz + iz, bType);
+          setBlock(sx + ix, sy + iy, sz + iz, bType, true);
           registerBlockPlacement(sx + ix, sy + iy, sz + iz, bType);
           placed++;
         }
@@ -1092,7 +1243,8 @@ function executeCommand(raw) {
     }
     spawnBlockParticles(sx + 1, sy + 1, sz + 1, BLOCK_TYPES[bType].color);
     gameState.metrics.validCommands["fill"] = true;
-    addChat(`Loop 3D executado: ${placed} blocos de ${BLOCK_TYPES[bType].name} criados! [+Pontos Programação!]`);
+    addChat(`Loop 3D executado: ${placed} blocos de ${BLOCK_TYPES[bType].name} sincronizados com a equipe!`);
+    flushTeamUpdates();
   } else {
     addChat("Comandos: /fill 3 2 3 oak_planks | /tp 0 4 -14 | /give torch 8 | /time set day");
   }
@@ -1101,7 +1253,7 @@ function executeCommand(raw) {
 }
 
 // ============================================================================
-// 8. INTERAÇÃO (MINERAR COM PARTÍCULAS, CONSTRUIR NAS ZONAS ECA, ATACAR MOBS)
+// 8. INTERAÇÃO (MINERAR, CONSTRUIR NAS ZONAS ECA, ATACAR MOBS)
 // ============================================================================
 function getTargetRay() {
   const p = gameState.player;
@@ -1128,9 +1280,10 @@ function registerBlockPlacement(x, y, z, type) {
     const info = BLOCK_TYPES[type];
     if (info && info.monument === zone.id) {
       gameState.metrics.monumentsDelivered[zone.id] = (gameState.metrics.monumentsDelivered[zone.id] || 0) + 1;
-      addChat(`Marco de ${zone.name} posicionado! (+Pontos Cidadania!)`);
+      addChat(`Marco de ${zone.name} posicionado pela equipe! (+Pontos Cidadania!)`);
     }
   }
+  recalcTeamZoneMetrics();
 }
 
 function handleLeftClick() {
@@ -1163,7 +1316,7 @@ function handleLeftClick() {
     const bType = ray.hit.type;
     const info = BLOCK_TYPES[bType] || BLOCK_TYPES.stone;
     spawnBlockParticles(ray.hit.x, ray.hit.y, ray.hit.z, info.color);
-    setBlock(ray.hit.x, ray.hit.y, ray.hit.z, null);
+    setBlock(ray.hit.x, ray.hit.y, ray.hit.z, null, true);
     if (gameState.mode === "survival") {
       let slot = gameState.hotbar.find(s => s.type === bType);
       if (slot) slot.count += 1;
@@ -1189,7 +1342,7 @@ function handleRightClick() {
     if (dx < 0.75 && dz < 0.75 && y === Math.floor(p.y)) {
       p.y = y + 0.55;
     }
-    setBlock(x, y, z, slot.type);
+    setBlock(x, y, z, slot.type, true);
     spawnBlockParticles(x, y, z, BLOCK_TYPES[slot.type].top);
     registerBlockPlacement(x, y, z, slot.type);
     if (gameState.mode === "survival") {
@@ -1273,7 +1426,7 @@ canvas.addEventListener("mousedown", (e) => {
 window.addEventListener("contextmenu", e => e.preventDefault());
 
 // ============================================================================
-// 10. RENDERIZAÇÃO 3D TEXTURIZADA EM PERSPECTIVA (AFIM SUBDIVIDIDA + SHADERS)
+// 10. RENDERIZAÇÃO 3D TEXTURIZADA EM PERSPECTIVA + AVATARES DOS COLEGAS
 // ============================================================================
 function projectPoint(wx, wy, wz) {
   const p = gameState.player;
@@ -1299,7 +1452,6 @@ function projectPoint(wx, wy, wz) {
   };
 }
 
-// Mapeamento afim de textura pixel art sobre triângulo 3D
 function drawTexturedTriangle(tex, p0, p1, p2, u0, v0, u1, v1, u2, v2) {
   ctx.save();
   ctx.beginPath();
@@ -1329,11 +1481,9 @@ function drawQuad(pts, fillStyle, strokeStyle, texName, shadeAlpha, distFog) {
 
   const tex = texName ? TEXTURE_CACHE[texName] : null;
   if (tex && distFog < 0.72) {
-    // Renderiza a textura pixel art 16x16 nas 2 metades do quadrilátero
     drawTexturedTriangle(tex, pts[0], pts[1], pts[2], 0, 0, 16, 0, 16, 16);
     drawTexturedTriangle(tex, pts[0], pts[2], pts[3], 0, 0, 16, 16, 0, 16);
 
-    // Sombreamento direcional + Neblina atmosférica (Shaders)
     if (shadeAlpha > 0 || distFog > 0) {
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
@@ -1387,7 +1537,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
 
   const stroke = isTarget ? "#ffffff" : "rgba(0,0,0,0.18)";
 
-  // 1. Face Superior (Mais iluminada pelo sol)
   if ((p.y + 1.62) > y1 && !getBlock(bx, by + 1, bz)) {
     const p00 = projectPoint(x0, y1, z0);
     const p10 = projectPoint(x1, y1, z0);
@@ -1396,7 +1545,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
     drawQuad([p00, p10, p11, p01], info.top, stroke, info.texTop, nightDim, distFog);
   }
 
-  // 2. Face Norte (-Z)
   if (p.z < z0 && !getBlock(bx, by, bz - 1)) {
     const p00 = projectPoint(x0, y1, z0);
     const p10 = projectPoint(x1, y1, z0);
@@ -1405,7 +1553,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
     drawQuad([p00, p10, p11, p01], info.color, stroke, info.texSide, 0.14 + nightDim, distFog);
   }
 
-  // 3. Face Sul (+Z)
   if (p.z > z1 && !getBlock(bx, by, bz + 1)) {
     const p00 = projectPoint(x0, y1, z1);
     const p10 = projectPoint(x1, y1, z1);
@@ -1414,7 +1561,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
     drawQuad([p00, p10, p11, p01], info.color, stroke, info.texSide, 0.14 + nightDim, distFog);
   }
 
-  // 4. Face Oeste (-X)
   if (p.x < x0 && !getBlock(bx - 1, by, bz)) {
     const p00 = projectPoint(x0, y1, z0);
     const p01 = projectPoint(x0, y1, z1);
@@ -1423,7 +1569,6 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
     drawQuad([p00, p01, p11, p10], info.side, stroke, info.texSide, 0.28 + nightDim, distFog);
   }
 
-  // 5. Face Leste (+X)
   if (p.x > x1 && !getBlock(bx + 1, by, bz)) {
     const p00 = projectPoint(x1, y1, z0);
     const p01 = projectPoint(x1, y1, z1);
@@ -1433,9 +1578,7 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
   }
 }
 
-// Desenha Mob Humanoide 3D articulado (estilo Creeper/Zumbi)
 function drawVoxelMob(m) {
-  const fov = Math.min(canvas.width, canvas.height) * 0.85;
   const base = projectPoint(m.x, m.y - 0.5, m.z);
   const head = projectPoint(m.x, m.y + 1.15, m.z);
   if (!base || !head) return;
@@ -1443,31 +1586,26 @@ function drawVoxelMob(m) {
   const h = Math.abs(base.y - head.y);
   const w = h * 0.48;
 
-  // Sombra no chão
   ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath();
   ctx.ellipse(base.x, base.y, w * 0.65, w * 0.25, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pernas e Tronco
   ctx.fillStyle = m.color;
   ctx.fillRect(base.x - w * 0.35, head.y + h * 0.32, w * 0.7, h * 0.68);
   ctx.strokeStyle = "#111";
   ctx.lineWidth = 1.2;
   ctx.strokeRect(base.x - w * 0.35, head.y + h * 0.32, w * 0.7, h * 0.68);
 
-  // Cabeça
   const headSize = w * 0.85;
   ctx.fillStyle = m.color;
   ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize);
   ctx.strokeRect(base.x - headSize / 2, head.y, headSize, headSize);
 
-  // Olhos brilhantes estilo Minecraft
   ctx.fillStyle = m.eye || "#fff";
   ctx.fillRect(base.x - headSize * 0.32, head.y + headSize * 0.32, headSize * 0.22, headSize * 0.16);
   ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.32, headSize * 0.22, headSize * 0.16);
 
-  // Placa de nome
   ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(base.x - 52, head.y - 22, 104, 16);
   ctx.fillStyle = "#fff";
@@ -1476,7 +1614,49 @@ function drawVoxelMob(m) {
   ctx.fillText(`${m.name} (${m.hp}♥)`, base.x, head.y - 10);
 }
 
-// Desenha a Mão / Bloco 3D / Ferramenta em Primeira Pessoa no canto direito
+// Renderiza o Avatar 3D dos colegas da equipe online
+function drawTeammateAvatar(tm) {
+  const base = projectPoint(tm.x, tm.y - 0.5, tm.z);
+  const head = projectPoint(tm.x, tm.y + 1.25, tm.z);
+  if (!base || !head) return;
+
+  const h = Math.abs(base.y - head.y);
+  const w = h * 0.48;
+
+  // Sombra
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath();
+  ctx.ellipse(base.x, base.y, w * 0.65, w * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Camisa da equipe
+  ctx.fillStyle = tm.color || "#38bdf8";
+  ctx.fillRect(base.x - w * 0.38, head.y + h * 0.32, w * 0.76, h * 0.68);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(base.x - w * 0.38, head.y + h * 0.32, w * 0.76, h * 0.68);
+
+  // Cabeça estilo Steve/Alex
+  const headSize = w * 0.85;
+  ctx.fillStyle = "#f1c27d";
+  ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize);
+  ctx.strokeRect(base.x - headSize / 2, head.y, headSize, headSize);
+
+  // Olhos amigáveis
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(base.x - headSize * 0.28, head.y + headSize * 0.35, headSize * 0.18, headSize * 0.14);
+  ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.35, headSize * 0.18, headSize * 0.14);
+
+  // Nametag flutuante do colega
+  const label = tm.name || "Colega";
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillRect(base.x - 58, head.y - 24, 116, 17);
+  ctx.fillStyle = "#5ce1e6";
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`★ ${label.slice(0, 16)}`, base.x, head.y - 12);
+}
+
 function drawFirstPersonHand() {
   const slot = gameState.hotbar[gameState.selectedSlot];
   if (!slot) return;
@@ -1492,7 +1672,6 @@ function drawFirstPersonHand() {
 
   ctx.save();
   if (info.tool) {
-    // Ferramenta 3D inclinada
     ctx.translate(bx + 50, by + 50);
     ctx.rotate(-0.45 - Math.sin(gameState.swingAnim * Math.PI) * 0.8);
     ctx.font = "76px sans-serif";
@@ -1501,9 +1680,7 @@ function drawFirstPersonHand() {
     ctx.filter = "drop-shadow(4px 8px 6px rgba(0,0,0,0.6))";
     ctx.fillText(info.icon, 0, 0);
   } else {
-    // Cubo Isométrico 3D real na mão do jogador
     const s = 48;
-    // Face Topo
     ctx.beginPath();
     ctx.moveTo(bx + s, by);
     ctx.lineTo(bx + s * 2, by + s * 0.45);
@@ -1516,7 +1693,6 @@ function drawFirstPersonHand() {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Face Esquerda
     ctx.beginPath();
     ctx.moveTo(bx, by + s * 0.45);
     ctx.lineTo(bx + s, by + s * 0.9);
@@ -1527,7 +1703,6 @@ function drawFirstPersonHand() {
     ctx.fill();
     ctx.stroke();
 
-    // Face Direita
     ctx.beginPath();
     ctx.moveTo(bx + s, by + s * 0.9);
     ctx.lineTo(bx + s * 2, by + s * 0.45);
@@ -1586,7 +1761,6 @@ function updatePhysics(dt) {
     p.onGround = true;
   }
 
-  // Atualiza partículas 3D
   for (let i = gameState.particles.length - 1; i >= 0; i--) {
     const pt = gameState.particles[i];
     pt.x += pt.vx * dt;
@@ -1597,7 +1771,6 @@ function updatePhysics(dt) {
     if (pt.life <= 0) gameState.particles.splice(i, 1);
   }
 
-  // Movimento suave das nuvens
   gameState.clouds.forEach(cl => {
     cl.x += dt * 0.45;
     if (cl.x > 48) cl.x = -48;
@@ -1635,7 +1808,6 @@ function renderScene() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Sol ou Lua Quadrado Estilo Minecraft
   const sunProj = projectPoint(35, 28, 35);
   if (sunProj) {
     ctx.save();
@@ -1646,7 +1818,6 @@ function renderScene() {
     ctx.restore();
   }
 
-  // Nuvens 3D no céu
   ctx.fillStyle = isNight ? "rgba(148,163,184,0.18)" : "rgba(255,255,255,0.72)";
   gameState.clouds.forEach(cl => {
     const c1 = projectPoint(cl.x, cl.y, cl.z);
@@ -1718,6 +1889,14 @@ function renderScene() {
     }
   });
 
+  Object.values(gameState.teammates).forEach(tm => {
+    const proj = projectPoint(tm.x, tm.y + 0.5, tm.z);
+    if (proj) {
+      const d = (tm.x - p.x) ** 2 + (tm.z - p.z) ** 2;
+      renderList.push({ kind: "teammate", tm, proj, dist: d });
+    }
+  });
+
   renderList.sort((a, b) => b.dist - a.dist);
 
   for (const item of renderList) {
@@ -1746,10 +1925,11 @@ function renderScene() {
       }
     } else if (item.kind === "mob") {
       drawVoxelMob(item.mob);
+    } else if (item.kind === "teammate") {
+      drawTeammateAvatar(item.tm);
     }
   }
 
-  // Partículas 3D de quebra/construção
   gameState.particles.forEach(pt => {
     const pr = projectPoint(pt.x, pt.y, pt.z);
     if (pr) {
@@ -1759,10 +1939,8 @@ function renderScene() {
     }
   });
 
-  // Mão / Bloco 3D do jogador
   drawFirstPersonHand();
 
-  // Vinheta sutil cinematográfica nas bordas
   const vig = ctx.createRadialGradient(
     canvas.width / 2, canvas.height / 2, canvas.height * 0.42,
     canvas.width / 2, canvas.height / 2, canvas.width * 0.75
@@ -1829,7 +2007,7 @@ async function loadTeacherRecords() {
     tr.innerHTML = `
       <td><b>${r.name || "-"}</b></td>
       <td>${r.email || "-"}</td>
-      <td>${r.team || "-"}</td>
+      <td><span style="color:#5ce1e6; font-weight:700;">${r.team || "-"}</span></td>
       <td>${Number(r.ax1 || 0).toFixed(1)}</td>
       <td>${Number(r.ax2 || 0).toFixed(1)}</td>
       <td>${Number(r.ax3 || 0).toFixed(1)}</td>
@@ -1845,7 +2023,7 @@ function exportGradesCSV() {
     alert("Não há notas registradas para exportar.");
     return;
   }
-  const header = "Aluno;Email_Escola;Turma;Cidadania_ECA_3.0;Crafting_2.5;Comandos_Codigo_2.5;Defesa_Engajamento_2.0;Nota_Final_10.0;Atualizado_Em\n";
+  const header = "Aluno;Email_Escola;Equipe_Sala;Cidadania_ECA_3.0;Crafting_2.5;Comandos_Codigo_2.5;Defesa_Engajamento_2.0;Nota_Final_10.0;Atualizado_Em\n";
   const rows = cachedRecords.map(r => [
     r.name,
     r.email,
@@ -1861,9 +2039,14 @@ function exportGradesCSV() {
   const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "notas_seliga_voxelengine.csv";
+  a.download = "notas_seliga_equipes.csv";
   a.click();
 }
 </script>
 </body>
-</html>
+</html>'''
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_code)
+
+print("Gerado com sucesso:", len(html_code), "bytes")
