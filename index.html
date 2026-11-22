@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxelEngine Studio — Edição Mundos, ECA & Avaliação Se Liga</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  body, html { width: 100%; height: 100%; overflow: hidden; background: #111; color: #fff; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* Telas Overlay */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(15, 20, 28, 0.94);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px; overflow-y: auto;
+  }
+  .hidden { display: none !important; }
+
+  .card {
+    background: #1e2634; border: 2px solid #38465e; border-radius: 12px;
+    padding: 24px; max-width: 780px; width: 100%; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+  }
+  h1 { font-size: 26px; color: #5ce1e6; margin-bottom: 6px; text-align: center; }
+  .subtitle { font-size: 13px; color: #a8b8d0; text-align: center; margin-bottom: 18px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 650px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .box {
+    background: #151b26; border: 1px solid #2c384d; border-radius: 8px; padding: 14px;
+  }
+  .box h3 { font-size: 14px; color: #ffd166; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  label { display: block; font-size: 12px; color: #b8c7dc; margin-bottom: 4px; margin-top: 8px; }
+  input, select {
+    width: 100%; padding: 9px 12px; border-radius: 6px; border: 1px solid #3e4f6b;
+    background: #0f141d; color: #fff; font-size: 14px; outline: none;
+  }
+  input:focus, select:focus { border-color: #5ce1e6; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 18px; border: none; border-radius: 7px; font-weight: bold;
+    font-size: 14px; cursor: pointer; transition: 0.15s; width: 100%; margin-top: 10px;
+  }
+  .btn-primary { background: #2ec4b6; color: #081c1a; }
+  .btn-primary:hover { background: #3be0d0; }
+  .btn-google { background: #ffffff; color: #222; }
+  .btn-google:hover { background: #e8eef5; }
+  .btn-secondary { background: #33415c; color: #fff; }
+  .btn-secondary:hover { background: #435578; }
+  .btn-warn { background: #f4a261; color: #1d1208; }
+  .btn-warn:hover { background: #f7b279; }
+
+  .status-pill {
+    display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px;
+    font-weight: bold; background: #263247; color: #8ecae6; margin-top: 6px;
+  }
+  .status-ok { background: #1b4332; color: #74c69d; }
+  .status-err { background: #591818; color: #ff8fa3; }
+
+  /* HUD do Jogo */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; width: 18px; height: 18px;
+    transform: translate(-50%, -50%); pointer-events: none;
+  }
+  #crosshair::before, #crosshair::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.85);
+  }
+  #crosshair::before { top: 8px; left: 0; width: 18px; height: 2px; }
+  #crosshair::after { left: 8px; top: 0; width: 2px; height: 18px; }
+
+  /* Painel de Nota e Missão ao Vivo */
+  #grade-hud {
+    position: fixed; top: 12px; left: 12px; background: rgba(14, 19, 28, 0.85);
+    border: 1px solid #38465e; border-radius: 10px; padding: 12px; width: 275px;
+    pointer-events: auto;
+  }
+  .grade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .grade-title { font-size: 12px; font-weight: bold; color: #5ce1e6; text-transform: uppercase; }
+  .grade-score { font-size: 18px; font-weight: 900; color: #ffd166; }
+  .axis-row { margin-top: 6px; font-size: 11px; }
+  .axis-label { display: flex; justify-content: space-between; color: #d0dceb; margin-bottom: 2px; }
+  .bar-bg { width: 100%; height: 6px; background: #253042; border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #2ec4b6; width: 0%; transition: width 0.25s; }
+
+  /* Status Vida/Fome/Hotbar */
+  #bottom-hud {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .bars-row { display: flex; justify-content: space-between; width: 468px; font-size: 13px; text-shadow: 1px 1px 2px #000; }
+  #hotbar {
+    display: flex; gap: 4px; background: rgba(15, 20, 28, 0.88);
+    padding: 5px; border-radius: 8px; border: 2px solid #485873;
+  }
+  .slot {
+    width: 48px; height: 48px; background: #1e2634; border: 2px solid #38465e;
+    border-radius: 6px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; position: relative; font-size: 10px; text-align: center;
+  }
+  .slot.active { border-color: #ffd166; background: #2b374d; transform: translateY(-2px); }
+  .slot-key { position: absolute; top: 2px; left: 4px; font-size: 9px; color: #8fa3bf; }
+  .slot-icon { font-size: 18px; }
+  .slot-count { position: absolute; bottom: 2px; right: 4px; font-size: 10px; font-weight: bold; color: #fff; }
+
+  /* Direitos ECA Checklist (Canto Superior Direito) */
+  #eca-hud {
+    position: fixed; top: 12px; right: 12px; background: rgba(14, 19, 28, 0.85);
+    border: 1px solid #38465e; border-radius: 10px; padding: 12px; width: 250px;
+    font-size: 12px;
+  }
+  #eca-hud h4 { color: #ffd166; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; }
+  .eca-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #242f40; }
+
+  /* F3 Debug & Console */
+  #f3-panel {
+    position: fixed; top: 215px; left: 12px; background: rgba(0,0,0,0.65);
+    padding: 8px 10px; border-radius: 6px; font-family: monospace; font-size: 11px;
+    color: #9ef01a; line-height: 1.4;
+  }
+  #console-box {
+    position: fixed; bottom: 95px; left: 50%; transform: translateX(-50%);
+    width: 520px; background: rgba(10, 14, 20, 0.95); border: 1px solid #5ce1e6;
+    border-radius: 8px; padding: 8px; pointer-events: auto; z-index: 50;
+  }
+  #console-input {
+    width: 100%; background: transparent; border: none; color: #5ce1e6;
+    font-family: monospace; font-size: 14px; outline: none;
+  }
+  #chat-log {
+    position: fixed; bottom: 140px; left: 12px; width: 340px; max-height: 150px;
+    overflow: hidden; display: flex; flex-direction: column; gap: 3px; font-size: 12px;
+  }
+  .chat-msg { background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #2ec4b6; }
+
+  /* Modal Crafting & Inventário (Tecla E) */
+  #inv-modal, #teacher-modal {
+    position: fixed; inset: 0; background: rgba(10, 14, 20, 0.88);
+    display: flex; align-items: center; justify-content: center; z-index: 90; pointer-events: auto;
+  }
+  .recipe-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+  .recipe-btn {
+    background: #161d29; border: 1px solid #38465e; color: #fff; padding: 8px;
+    border-radius: 6px; text-align: left; cursor: pointer; font-size: 12px;
+  }
+  .recipe-btn:hover { border-color: #2ec4b6; background: #1f293a; }
+
+  /* Tabela Painel Professor */
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+  th, td { border: 1px solid #38465e; padding: 7px 8px; text-align: left; }
+  th { background: #151b26; color: #5ce1e6; }
+  tr:nth-child(even) { background: #19212e; }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- TELA INICIAL: LOGIN @ESCOLA + GERENCIADOR DE MUNDOS -->
+<div id="start-screen" class="overlay">
+  <div class="card">
+    <h1>VoxelEngine Studio — Se Liga (ECA & CF/88)</h1>
+    <p class="subtitle">Construa os 4 Direitos Fundamentais (Educação, Cultura, Esporte e Lazer), programe com comandos e registre sua avaliação individual.</p>
+
+    <div class="grid-2">
+      <!-- Bloco 1: Identificação e Firebase @escola -->
+      <div class="box">
+        <h3>1. Identificação do Aluno (@escola)</h3>
+        <button id="btn-google-login" class="btn btn-google" onclick="loginWithGoogle()">
+          Entrar com Google (@escola)
+        </button>
+        <div id="auth-status" class="status-pill">Conectando ao projeto seliga-voxelcraft...</div>
+
+        <label>Nome Completo do Aluno:</label>
+        <input type="text" id="student-name" placeholder="Ex: Ana Clara Souza">
+
+        <label>E-mail Institucional (@escola):</label>
+        <input type="email" id="student-email" placeholder="ana.souza@escola.pr.gov.br">
+
+        <label>Turma / Equipe:</label>
+        <input type="text" id="student-team" placeholder="Ex: 8º Ano B - Equipe Alpha" value="Turma Se Liga">
+      </div>
+
+      <!-- Bloco 2: Mundo, Seed e Arquivos -->
+      <div class="box">
+        <h3>2. Mundo & Arquivos (.voxelworld)</h3>
+        <label>Seed do Mundo (Geração Procedural):</label>
+        <input type="text" id="world-seed" value="ECA1988">
+
+        <label>Modo de Jogo:</label>
+        <select id="game-mode">
+          <option value="survival">Sobrevivência (Mineração, Crafting & Desafios)</option>
+          <option value="creative">Criativo (Blocos Infinitos & Construção Livre)</option>
+        </select>
+
+        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+          Importar Mundo Salvo (.voxelworld)
+        </button>
+        <input type="file" id="import-file" accept=".voxelworld,.json" class="hidden" onchange="importWorldFile(event)">
+
+        <button class="btn btn-warn" onclick="openTeacherModal()">
+          Painel do Professor (Notas 0–10 & CSV)
+        </button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="startGame()">
+      INICIAR MISSÃO E ENTRAR NO MUNDO 3D
+    </button>
+  </div>
+</div>
+
+<!-- HUD IN-GAME -->
+<div id="hud" class="hidden">
+  <div id="crosshair"></div>
+
+  <!-- Painel de Nota Individual Automática (0 a 10) -->
+  <div id="grade-hud">
+    <div class="grade-header">
+      <span class="grade-title">Avaliação Individual</span>
+      <span class="grade-score" id="live-grade">0.0 / 10</span>
+    </div>
+    <div style="font-size:11px; color:#8fa3bf; margin-bottom:6px;" id="hud-student-info">Aluno: ---</div>
+
+    <div class="axis-row">
+      <div class="axis-label"><span>1. Cidadania / ECA (3.0)</span><span id="ax1-val">0.0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="ax1-bar"></div></div>
+    </div>
+    <div class="axis-row">
+      <div class="axis-label"><span>2. Mineração & Crafting (2.5)</span><span id="ax2-val">0.0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="ax2-bar"></div></div>
+    </div>
+    <div class="axis-row">
+      <div class="axis-label"><span>3. Código / Comandos (2.5)</span><span id="ax3-val">0.0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="ax3-bar"></div></div>
+    </div>
+    <div class="axis-row">
+      <div class="axis-label"><span>4. Defesa & Participação (2.0)</span><span id="ax4-val">0.0</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="ax4-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- Checklist dos 4 Direitos Constitucionais -->
+  <div id="eca-hud">
+    <h4>Direitos Constitucionais (CF/88)</h4>
+    <div class="eca-item"><span>📘 Educação (Escola Norte)</span><span id="st-edu">0/4</span></div>
+    <div class="eca-item"><span>🎭 Cultura (Cinema Sul)</span><span id="st-cul">0/4</span></div>
+    <div class="eca-item"><span>⚽ Esporte (Estádio Leste)</span><span id="st-esp">0/4</span></div>
+    <div class="eca-item"><span>🌳 Lazer (Praça Oeste)</span><span id="st-laz">0/4</span></div>
+    <div style="margin-top:8px; font-size:10px; color:#9bb0cc; line-height:1.3;">
+      <b>Controles:</b> WASD andar | Espaço pular | Esq. minerar/atacar | Dir. ou Q construir | E crafting | / comandos | F3 debug | ESC pausar/salvar
+    </div>
+  </div>
+
+  <!-- F3 Debug -->
+  <div id="f3-panel">
+    VoxelEngine Studio 1.0 (3D Isometric/Projected)<br>
+    XYZ: <span id="f3-xyz">0, 0, 0</span> | Zona: <span id="f3-zone">Centro</span><br>
+    Modo: <span id="f3-mode">Survival</span> | Hora: <span id="f3-time">Dia</span><br>
+    Sync Firebase: <span id="f3-sync">Aguardando...</span>
+  </div>
+
+  <div id="chat-log"></div>
+
+  <!-- Console de Comandos (/) -->
+  <div id="console-box" class="hidden">
+    <input type="text" id="console-input" placeholder="Digite um comando (ex: /fill 3 2 3 oak_planks, /tp 0 8 -14, /give torch 8, /time set day)">
+  </div>
+
+  <!-- Barra Inferior (Vida, Fome, Hotbar) -->
+  <div id="bottom-hud">
+    <div class="bars-row">
+      <span id="hearts-display">❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️</span>
+      <span id="xp-display" style="color:#80ed99; font-weight:bold;">Nível 1</span>
+      <span id="hunger-display">🍗🍗🍗🍗🍗🍗🍗🍗🍗🍗</span>
+    </div>
+    <div id="hotbar"></div>
+  </div>
+</div>
+
+<!-- MODAL DE INVENTÁRIO & CRAFTING (TECLA E) -->
+<div id="inv-modal" class="hidden">
+  <div class="card" style="max-width:600px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="color:#ffd166; font-size:18px;">Bancada de Criação (Crafting) & Mochila</h2>
+      <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px;" onclick="toggleInventory(false)">Fechar (E)</button>
+    </div>
+    <p style="font-size:12px; color:#a8b8d0; margin-top:4px;">Combine recursos minerados para fabricar ferramentas e os Marcos dos Direitos do ECA (conta pontos no Eixo 2!).</p>
+    <div class="recipe-grid" id="recipe-list"></div>
+    <div style="margin-top:14px; display:flex; gap:10px;">
+      <button class="btn btn-primary" onclick="exportWorldFile()">Baixar Mundo (.voxelworld)</button>
+      <button class="btn btn-warn" onclick="syncToFirebase(true)">Enviar Nota ao Professor Agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAINEL DO PROFESSOR -->
+<div id="teacher-modal" class="hidden">
+  <div class="card" style="max-width:860px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="color:#5ce1e6; font-size:18px;">Painel de Avaliação Individual — Se Liga (0,0 a 10,0)</h2>
+      <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px;" onclick="closeTeacherModal()">Fechar</button>
+    </div>
+    <p style="font-size:12px; color:#a8b8d0; margin-top:4px;">
+      Registra automaticamente os dados salvos no navegador e no Cloud Firestore (projeto <b>seliga-voxelcraft</b>).
+    </p>
+    <div style="overflow-x:auto; max-height:340px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>E-mail (@escola)</th>
+            <th>Turma</th>
+            <th>Cidadania (3.0)</th>
+            <th>Crafting (2.5)</th>
+            <th>Código / (2.5)</th>
+            <th>Defesa (2.0)</th>
+            <th>Nota Final</th>
+          </tr>
+        </thead>
+        <tbody id="teacher-table-body"></tbody>
+      </table>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <button class="btn btn-primary" onclick="exportGradesCSV()">Exportar Planilha de Notas (.CSV)</button>
+      <button class="btn btn-secondary" onclick="loadTeacherRecords()">Atualizar Lista</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE SDK (Compatível via CDN para hospedagem estática) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ============================================================================
+// 1. CONFIGURAÇÃO DO FIREBASE (PROJETO: seliga-voxelcraft)
+// ============================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDXJR7gAFDsnHi1EMj4GIHYBIBQWUzWJ7k",
+  authDomain: "seliga-voxelcraft.firebaseapp.com",
+  projectId: "seliga-voxelcraft",
+  storageBucket: "seliga-voxelcraft.firebasestorage.app",
+  messagingSenderId: "350673199806",
+  appId: "1:350673199806:web:2662bdb842d3967c1fb4ef",
+  measurementId: "G-49SXBGF99G"
+};
+
+let db = null;
+let auth = null;
+let firebaseReady = false;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  firebaseReady = true;
+  document.getElementById("auth-status").textContent = "Firebase Conectado (seliga-voxelcraft)! Pronto para login @escola.";
+  document.getElementById("auth-status").classList.add("status-ok");
+} catch (e) {
+  console.warn("Firebase em modo local:", e);
+  document.getElementById("auth-status").textContent = "Modo Local (Verifique sua conexão com a internet).";
+}
+
+async function loginWithGoogle() {
+  if (!firebaseReady) {
+    alert("Firebase indisponível no momento. Preencha seu nome e e-mail @escola manualmente abaixo.");
+    return;
+  }
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const res = await auth.signInWithPopup(provider);
+    const email = res.user.email || "";
+    if (!email.toLowerCase().includes("@escola")) {
+      await auth.signOut();
+      const st = document.getElementById("auth-status");
+      st.textContent = "Acesso negado: use apenas seu e-mail institucional @escola!";
+      st.className = "status-pill status-err";
+      return;
+    }
+    document.getElementById("student-name").value = res.user.displayName || email.split("@")[0];
+    document.getElementById("student-email").value = email;
+    const st = document.getElementById("auth-status");
+    st.textContent = "Autenticado: " + email;
+    st.className = "status-pill status-ok";
+  } catch (err) {
+    alert("Erro no login Google (verifique se o domínio está autorizado no Firebase Authentication): " + err.message);
+  }
+}
+
+// ============================================================================
+// 2. ESTADO DO JOGO, MÉTRICAS INDIVIDUAIS E CÁLCULO DA NOTA (0 A 10)
+// ============================================================================
+const BLOCK_TYPES = {
+  grass:      { name: "Grama", color: "#40916c", side: "#2d6a4f", top: "#74c69d", icon: "🟩" },
+  dirt:       { name: "Terra", color: "#7f4f24", side: "#582f0e", top: "#936639", icon: "🟫" },
+  stone:      { name: "Pedra", color: "#6c757d", side: "#495057", top: "#adb5bd", icon: "🪨" },
+  wood:       { name: "Tronco", color: "#583101", side: "#3d2201", top: "#8b5e34", icon: "🪵" },
+  oak_planks: { name: "Tábuas", color: "#b07d4f", side: "#8a5a32", top: "#d4a373", icon: "🧱" },
+  torch:      { name: "Tocha", color: "#f48c06", side: "#dc2f02", top: "#ffba08", icon: "🔥" },
+  pickaxe:    { name: "Picareta", color: "#4cc9f0", side: "#3a86ff", top: "#90e0ef", icon: "⛏️", tool: true },
+  sword:      { name: "Espada ECA", color: "#f72585", side: "#b5179e", top: "#ff70a6", icon: "🗡️", tool: true },
+  mon_edu:    { name: "Bloco Escola", color: "#2563eb", side: "#1d4ed8", top: "#60a5fa", icon: "📘", monument: "edu" },
+  mon_cul:    { name: "Bloco Cinema", color: "#7c3aed", side: "#5b21b6", top: "#a78bfa", icon: "🎭", monument: "cul" },
+  mon_esp:    { name: "Bloco Estádio", color: "#0d9488", side: "#115e59", top: "#5ce1e6", icon: "⚽", monument: "esp" },
+  mon_laz:    { name: "Bloco Praça", color: "#eab308", side: "#ca8a04", top: "#fde047", icon: "🌳", monument: "laz" }
+};
+
+const RECIPES = [
+  { id: "oak_planks", label: "4x Tábuas de Madeira", cost: { wood: 1 }, out: { oak_planks: 4 } },
+  { id: "torch",      label: "4x Tochas Luminosas", cost: { wood: 1, stone: 1 }, out: { torch: 4 } },
+  { id: "pickaxe",    label: "1x Picareta de Pedra", cost: { oak_planks: 2, stone: 2 }, out: { pickaxe: 1 } },
+  { id: "sword",      label: "1x Espada da Cidadania", cost: { oak_planks: 1, stone: 2 }, out: { sword: 1 } },
+  { id: "mon_edu",    label: "1x Kit Escola (Educação)", cost: { oak_planks: 2, stone: 1 }, out: { mon_edu: 1 } },
+  { id: "mon_cul",    label: "1x Kit Cinema (Cultura)", cost: { oak_planks: 2, torch: 1 }, out: { mon_cul: 1 } },
+  { id: "mon_esp",    label: "1x Kit Estádio (Esporte)", cost: { stone: 2, oak_planks: 1 }, out: { mon_esp: 1 } },
+  { id: "mon_laz",    label: "1x Kit Praça (Lazer)", cost: { wood: 2, grass: 1 }, out: { mon_laz: 1 } }
+];
+
+const ZONES = [
+  { id: "edu", name: "Educação (Escola)", x: 0, z: -14, r: 5, color: "#3a86ff" },
+  { id: "cul", name: "Cultura (Cinema)",  x: 0, z: 14,  r: 5, color: "#8338ec" },
+  { id: "esp", name: "Esporte (Estádio)", x: 14, z: 0,  r: 5, color: "#2ec4b6" },
+  { id: "laz", name: "Lazer (Praça)",     x: -14, z: 0, r: 5, color: "#ffbe0b" }
+];
+
+let gameState = {
+  started: false,
+  paused: false,
+  studentName: "",
+  studentEmail: "",
+  studentTeam: "",
+  seed: "ECA1988",
+  mode: "survival",
+  worldBlocks: {},
+  hotbar: [
+    { type: "pickaxe", count: 1 },
+    { type: "sword", count: 1 },
+    { type: "oak_planks", count: 12 },
+    { type: "stone", count: 8 },
+    { type: "torch", count: 6 },
+    { type: "mon_edu", count: 1 },
+    { type: "mon_cul", count: 1 },
+    { type: "mon_esp", count: 1 },
+    { type: "mon_laz", count: 1 }
+  ],
+  selectedSlot: 0,
+  hp: 20,
+  hunger: 20,
+  xp: 0,
+  timeOfDay: 0,
+  player: { x: 0, y: 1.5, z: 0, vx: 0, vy: 0, vz: 0, yaw: 0, pitch: -0.25, onGround: false },
+  mobs: [],
+  metrics: {
+    zoneBlocksPlaced: 0,
+    monumentsDelivered: { edu: 0, cul: 0, esp: 0, laz: 0 },
+    resourcesMined: 0,
+    craftedItems: {},
+    validCommands: {},
+    mobsDefeated: 0,
+    activeSeconds: 0
+  }
+};
+
+function computeGrade() {
+  const m = gameState.metrics;
+  const monTotal = Object.values(m.monumentsDelivered).reduce((a, b) => a + b, 0);
+  const ax1 = Math.min(3.0, (m.zoneBlocksPlaced * 0.15) + (Math.min(3, monTotal) * 0.25));
+
+  const uniqueCrafted = Object.keys(m.craftedItems).length;
+  const ax2 = Math.min(2.5, (Math.min(10, m.resourcesMined) * 0.10) + (Math.min(3, uniqueCrafted) * 0.50));
+
+  const uniqueCmds = Object.keys(m.validCommands).length;
+  const ax3 = Math.min(2.5, Math.min(2, uniqueCmds) * 1.25);
+
+  const activePts = Math.min(1.0, (m.activeSeconds / 45) * 1.0);
+  const mobPts = Math.min(1.0, m.mobsDefeated * 0.34);
+  const ax4 = Math.min(2.0, activePts + mobPts);
+
+  const total = Number((ax1 + ax2 + ax3 + ax4).toFixed(1));
+  return {
+    ax1: Number(ax1.toFixed(1)),
+    ax2: Number(ax2.toFixed(1)),
+    ax3: Number(ax3.toFixed(1)),
+    ax4: Number(ax4.toFixed(1)),
+    total
+  };
+}
+
+function updateGradeHUD() {
+  const g = computeGrade();
+  document.getElementById("live-grade").textContent = g.total.toFixed(1) + " / 10";
+  document.getElementById("ax1-val").textContent = g.ax1.toFixed(1);
+  document.getElementById("ax2-val").textContent = g.ax2.toFixed(1);
+  document.getElementById("ax3-val").textContent = g.ax3.toFixed(1);
+  document.getElementById("ax4-val").textContent = g.ax4.toFixed(1);
+
+  document.getElementById("ax1-bar").style.width = ((g.ax1 / 3.0) * 100) + "%";
+  document.getElementById("ax2-bar").style.width = ((g.ax2 / 2.5) * 100) + "%";
+  document.getElementById("ax3-bar").style.width = ((g.ax3 / 2.5) * 100) + "%";
+  document.getElementById("ax4-bar").style.width = ((g.ax4 / 2.0) * 100) + "%";
+
+  const md = gameState.metrics.monumentsDelivered;
+  document.getElementById("st-edu").textContent = Math.min(4, md.edu) + "/4";
+  document.getElementById("st-cul").textContent = Math.min(4, md.cul) + "/4";
+  document.getElementById("st-esp").textContent = Math.min(4, md.esp) + "/4";
+  document.getElementById("st-laz").textContent = Math.min(4, md.laz) + "/4";
+}
+
+// ============================================================================
+// 3. SINCRONIZAÇÃO AUTOMÁTICA (LOCALSTORAGE + CLOUD FIRESTORE)
+// ============================================================================
+async function syncToFirebase(manual = false) {
+  if (!gameState.started) return;
+  const g = computeGrade();
+  const payload = {
+    name: gameState.studentName,
+    email: gameState.studentEmail,
+    team: gameState.studentTeam,
+    seed: gameState.seed,
+    ax1: g.ax1,
+    ax2: g.ax2,
+    ax3: g.ax3,
+    ax4: g.ax4,
+    totalGrade: g.total,
+    metrics: gameState.metrics,
+    updatedAt: new Date().toISOString()
+  };
+
+  const localRecords = JSON.parse(localStorage.getItem("seliga_records") || "{}");
+  localRecords[gameState.studentEmail] = payload;
+  localStorage.setItem("seliga_records", JSON.stringify(localRecords));
+
+  if (firebaseReady && db) {
+    try {
+      await db.collection("avaliacoes_seliga").doc(gameState.studentEmail).set(payload, { merge: true });
+      document.getElementById("f3-sync").textContent = "Cloud OK (" + new Date().toLocaleTimeString() + ")";
+      if (manual) addChat("Nota (" + g.total.toFixed(1) + ") enviada com sucesso ao Firebase!");
+    } catch (e) {
+      document.getElementById("f3-sync").textContent = "Erro Cloud (Salvo Local)";
+    }
+  } else {
+    document.getElementById("f3-sync").textContent = "Local OK (" + new Date().toLocaleTimeString() + ")";
+    if (manual) addChat("Progresso salvo localmente! Nota atual: " + g.total.toFixed(1));
+  }
+}
+
+setInterval(() => {
+  if (gameState.started && !gameState.paused) {
+    gameState.metrics.activeSeconds += 1;
+    updateGradeHUD();
+    if (gameState.metrics.activeSeconds % 10 === 0) syncToFirebase(false);
+  }
+}, 1000);
+
+// ============================================================================
+// 4. GERAÇÃO PROCEDURAL DO MUNDO POR SEED + IMPORT/EXPORT (.voxelworld)
+// ============================================================================
+function hashSeed(str) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function generateWorld(seedStr) {
+  gameState.worldBlocks = {};
+  const seedNum = hashSeed(seedStr || "ECA1988");
+
+  for (let x = -22; x <= 22; x++) {
+    for (let z = -22; z <= 22; z++) {
+      const nearZone = ZONES.some(zn => Math.hypot(x - zn.x, z - zn.z) <= zn.r + 1);
+      const n = Math.sin((x + seedNum % 100) * 0.22) * Math.cos((z + seedNum % 77) * 0.22);
+      const h = nearZone ? 0 : Math.max(0, Math.round(n * 1.6));
+
+      for (let y = -1; y <= h; y++) {
+        let type = y === h ? "grass" : (y >= h - 1 ? "dirt" : "stone");
+        setBlock(x, y, z, type);
+      }
+
+      if (!nearZone && Math.hypot(x, z) > 4) {
+        const r = Math.abs(Math.sin(x * 12.9898 + z * 78.233 + seedNum)) % 1;
+        if (r < 0.025) {
+          setBlock(x, h + 1, z, "wood");
+          setBlock(x, h + 2, z, "wood");
+          setBlock(x, h + 3, z, "grass");
+          setBlock(x + 1, h + 2, z, "grass");
+          setBlock(x - 1, h + 2, z, "grass");
+          setBlock(x, h + 2, z + 1, "grass");
+          setBlock(x, h + 2, z - 1, "grass");
+        } else if (r > 0.975) {
+          setBlock(x, h + 1, z, "stone");
+        }
+      }
+    }
+  }
+}
+
+function setBlock(x, y, z, type) {
+  const k = `${Math.round(x)},${Math.round(y)},${Math.round(z)}`;
+  if (!type) delete gameState.worldBlocks[k];
+  else gameState.worldBlocks[k] = type;
+}
+
+function getBlock(x, y, z) {
+  return gameState.worldBlocks[`${Math.round(x)},${Math.round(y)},${Math.round(z)}`];
+}
+
+function exportWorldFile() {
+  const data = {
+    format: "voxelworld-seliga-v1",
+    student: { name: gameState.studentName, email: gameState.studentEmail, team: gameState.studentTeam },
+    seed: gameState.seed,
+    grade: computeGrade(),
+    metrics: gameState.metrics,
+    blocks: gameState.worldBlocks
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `mundo_${(gameState.studentName || "aluno").replace(/\s+/g, "_")}.voxelworld`;
+  a.click();
+  addChat("Arquivo .voxelworld exportado com sucesso!");
+}
+
+function importWorldFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (parsed.blocks) {
+        gameState.worldBlocks = parsed.blocks;
+        if (parsed.seed) document.getElementById("world-seed").value = parsed.seed;
+        alert("Mundo carregado com sucesso (" + Object.keys(parsed.blocks).length + " blocos)! Clique em Iniciar Missão.");
+      }
+    } catch (err) {
+      alert("Arquivo .voxelworld inválido.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================================
+// 5. MOTOR 3D REAL (PROJEÇÃO POLIGONAL 3D DE CUBOS 1x1x1 + RAYCASTING)
+// ============================================================================
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+let keys = {};
+let consoleOpen = false;
+let invOpen = false;
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+function startGame() {
+  const name = document.getElementById("student-name").value.trim();
+  const email = document.getElementById("student-email").value.trim().toLowerCase();
+  const team = document.getElementById("student-team").value.trim();
+
+  if (!name || !email.includes("@escola")) {
+    alert("Por favor, informe seu Nome Completo e um e-mail institucional válido contendo '@escola' para registrar sua avaliação individual.");
+    return;
+  }
+
+  gameState.studentName = name;
+  gameState.studentEmail = email;
+  gameState.studentTeam = team || "Se Liga";
+  gameState.seed = document.getElementById("world-seed").value.trim() || "ECA1988";
+  gameState.mode = document.getElementById("game-mode").value;
+
+  if (Object.keys(gameState.worldBlocks).length === 0) {
+    generateWorld(gameState.seed);
+  }
+
+  spawnMobs();
+  renderHotbar();
+  renderRecipes();
+  updateGradeHUD();
+
+  document.getElementById("hud-student-info").textContent = `${name} (${email})`;
+  document.getElementById("f3-mode").textContent = gameState.mode.toUpperCase();
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("hud").classList.remove("hidden");
+  gameState.started = true;
+
+  addChat("Bem-vindo(a), " + name + "! Use /fill, /tp ou /give para ganhar pontos de programação!");
+  canvas.requestPointerLock?.();
+  requestAnimationFrame(gameLoop);
+}
+
+function spawnMobs() {
+  gameState.mobs = [
+    { name: "Evasão Escolar", x: 8, y: 1, z: -8, hp: 3, color: "#e63946" },
+    { name: "Preconceito", x: -9, y: 1, z: 9, hp: 3, color: "#9b5de5" },
+    { name: "Negligência", x: 10, y: 1, z: 10, hp: 3, color: "#f77f00" },
+    { name: "Bullying", x: -10, y: 1, z: -10, hp: 3, color: "#d62828" }
+  ];
+}
+
+function addChat(msg) {
+  const log = document.getElementById("chat-log");
+  const div = document.createElement("div");
+  div.className = "chat-msg";
+  div.textContent = msg;
+  log.appendChild(div);
+  if (log.children.length > 5) log.removeChild(log.firstChild);
+}
+
+function renderHotbar() {
+  const hb = document.getElementById("hotbar");
+  hb.innerHTML = "";
+  gameState.hotbar.forEach((slot, idx) => {
+    const info = BLOCK_TYPES[slot.type] || { name: slot.type, icon: "📦" };
+    const div = document.createElement("div");
+    div.className = "slot" + (idx === gameState.selectedSlot ? " active" : "");
+    div.innerHTML = `
+      <span class="slot-key">${idx + 1}</span>
+      <span class="slot-icon">${info.icon}</span>
+      <span style="font-size:9px; color:#cbd5e1;">${info.name.slice(0, 8)}</span>
+      <span class="slot-count">${gameState.mode === "creative" ? "∞" : slot.count}</span>
+    `;
+    hb.appendChild(div);
+  });
+}
+
+function renderRecipes() {
+  const list = document.getElementById("recipe-list");
+  list.innerHTML = "";
+  RECIPES.forEach(rec => {
+    const costStr = Object.entries(rec.cost).map(([k, v]) => `${v}x ${BLOCK_TYPES[k].name}`).join(" + ");
+    const btn = document.createElement("button");
+    btn.className = "recipe-btn";
+    btn.innerHTML = `<b>${rec.label}</b><br><span style="color:#94a3b8;">Custo: ${costStr}</span>`;
+    btn.onclick = () => craftRecipe(rec);
+    list.appendChild(btn);
+  });
+}
+
+function craftRecipe(rec) {
+  if (gameState.mode !== "creative") {
+    for (const [mat, qty] of Object.entries(rec.cost)) {
+      const slot = gameState.hotbar.find(s => s.type === mat);
+      if (!slot || slot.count < qty) {
+        addChat("Recursos insuficientes para fabricar " + rec.label);
+        return;
+      }
+    }
+    for (const [mat, qty] of Object.entries(rec.cost)) {
+      const slot = gameState.hotbar.find(s => s.type === mat);
+      slot.count -= qty;
+    }
+  }
+  for (const [outMat, outQty] of Object.entries(rec.out)) {
+    let slot = gameState.hotbar.find(s => s.type === outMat);
+    if (slot) slot.count += outQty;
+    else gameState.hotbar.push({ type: outMat, count: outQty });
+  }
+  gameState.metrics.craftedItems[rec.id] = true;
+  gameState.xp += 10;
+  document.getElementById("xp-display").textContent = "Nível " + (1 + Math.floor(gameState.xp / 30));
+  renderHotbar();
+  updateGradeHUD();
+  addChat("Fabricado: " + rec.label + " (+Pontos Eixo 2!)");
+}
+
+function toggleInventory(force) {
+  invOpen = typeof force === "boolean" ? force : !invOpen;
+  const modal = document.getElementById("inv-modal");
+  if (invOpen) {
+    modal.classList.remove("hidden");
+    document.exitPointerLock?.();
+  } else {
+    modal.classList.add("hidden");
+    canvas.requestPointerLock?.();
+  }
+}
+
+// ============================================================================
+// 6. TERMINAL DE COMANDOS DE PROGRAMAÇÃO (/)
+// ============================================================================
+function executeCommand(raw) {
+  const parts = raw.trim().split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+
+  if (cmd === "/gamemode") {
+    const m = (parts[1] || "").toLowerCase();
+    if (m === "creative" || m === "1") {
+      gameState.mode = "creative";
+      document.getElementById("f3-mode").textContent = "CREATIVE";
+      gameState.metrics.validCommands["gamemode"] = true;
+      addChat("Modo alterado para Criativo!");
+    } else if (m === "survival" || m === "0") {
+      gameState.mode = "survival";
+      document.getElementById("f3-mode").textContent = "SURVIVAL";
+      gameState.metrics.validCommands["gamemode"] = true;
+      addChat("Modo alterado para Sobrevivência!");
+    }
+  } else if (cmd === "/time") {
+    if (parts[1] === "set") {
+      gameState.timeOfDay = parts[2] === "night" ? 0.72 : 0.15;
+      gameState.metrics.validCommands["time"] = true;
+      addChat("Horário alterado para " + (parts[2] || "day"));
+    }
+  } else if (cmd === "/tp" && parts.length >= 4) {
+    const tx = parseFloat(parts[1]), ty = parseFloat(parts[2]), tz = parseFloat(parts[3]);
+    if (!isNaN(tx) && !isNaN(ty) && !isNaN(tz)) {
+      gameState.player.x = tx;
+      gameState.player.y = ty;
+      gameState.player.z = tz;
+      gameState.metrics.validCommands["tp"] = true;
+      addChat(`Teleportado para (${tx}, ${ty}, ${tz}) [+Pontos Programação!]`);
+    }
+  } else if (cmd === "/give" && parts.length >= 2) {
+    const item = parts[1].toLowerCase();
+    const qty = Math.min(64, parseInt(parts[2]) || 4);
+    if (BLOCK_TYPES[item]) {
+      let slot = gameState.hotbar.find(s => s.type === item);
+      if (slot) slot.count += qty;
+      else gameState.hotbar[gameState.selectedSlot] = { type: item, count: qty };
+      gameState.metrics.validCommands["give"] = true;
+      renderHotbar();
+      addChat(`Recebido ${qty}x ${BLOCK_TYPES[item].name} [+Pontos Programação!]`);
+    } else {
+      addChat("Itens válidos: oak_planks, stone, torch, mon_edu, mon_cul, mon_esp, mon_laz");
+    }
+  } else if (cmd === "/fill" && parts.length >= 5) {
+    const dx = Math.min(8, Math.max(1, parseInt(parts[1]) || 3));
+    const dy = Math.min(6, Math.max(1, parseInt(parts[2]) || 2));
+    const dz = Math.min(8, Math.max(1, parseInt(parts[3]) || 3));
+    const bType = BLOCK_TYPES[parts[4]] ? parts[4] : "oak_planks";
+
+    const sx = Math.round(gameState.player.x + Math.sin(gameState.player.yaw) * 3);
+    const sy = Math.round(gameState.player.y);
+    const sz = Math.round(gameState.player.z + Math.cos(gameState.player.yaw) * 3);
+
+    let placed = 0;
+    for (let ix = 0; ix < dx; ix++) {
+      for (let iy = 0; iy < dy; iy++) {
+        for (let iz = 0; iz < dz; iz++) {
+          setBlock(sx + ix, sy + iy, sz + iz, bType);
+          registerBlockPlacement(sx + ix, sy + iy, sz + iz, bType);
+          placed++;
+        }
+      }
+    }
+    gameState.metrics.validCommands["fill"] = true;
+    addChat(`Loop 3D executado: ${placed} blocos de ${BLOCK_TYPES[bType].name} criados! [+Pontos Programação!]`);
+  } else {
+    addChat("Comandos: /fill 3 2 3 oak_planks | /tp 0 4 -14 | /give torch 8 | /time set day");
+  }
+  updateGradeHUD();
+  syncToFirebase(false);
+}
+
+// ============================================================================
+// 7. INTERAÇÃO (MINERAR, CONSTRUIR NAS ZONAS ECA, ATACAR MOBS)
+// ============================================================================
+function getTargetRay() {
+  const p = gameState.player;
+  const dirX = Math.sin(p.yaw) * Math.cos(p.pitch);
+  const dirY = Math.sin(p.pitch);
+  const dirZ = Math.cos(p.yaw) * Math.cos(p.pitch);
+
+  let prev = null;
+  for (let d = 0.5; d <= 5.5; d += 0.25) {
+    const rx = Math.round(p.x + dirX * d);
+    const ry = Math.round(p.y + 1.55 + dirY * d);
+    const rz = Math.round(p.z + dirZ * d);
+    const blk = getBlock(rx, ry, rz);
+    if (blk) return { hit: { x: rx, y: ry, z: rz, type: blk }, place: prev };
+    prev = { x: rx, y: ry, z: rz };
+  }
+  return null;
+}
+
+function registerBlockPlacement(x, y, z, type) {
+  const zone = ZONES.find(zn => Math.hypot(x - zn.x, z - zn.z) <= zn.r);
+  if (zone) {
+    gameState.metrics.zoneBlocksPlaced += 1;
+    const info = BLOCK_TYPES[type];
+    if (info && info.monument === zone.id) {
+      gameState.metrics.monumentsDelivered[zone.id] = (gameState.metrics.monumentsDelivered[zone.id] || 0) + 1;
+      addChat(`Marco de ${zone.name} posicionado! (+Pontos Cidadania!)`);
+    }
+  }
+}
+
+function handleLeftClick() {
+  const p = gameState.player;
+  for (let i = gameState.mobs.length - 1; i >= 0; i--) {
+    const m = gameState.mobs[i];
+    if (Math.hypot(m.x - p.x, m.z - p.z) < 3.6) {
+      const slot = gameState.hotbar[gameState.selectedSlot];
+      const dmg = (slot && slot.type === "sword") ? 2 : 1;
+      m.hp -= dmg;
+      m.x += (m.x - p.x) * 0.6;
+      m.z += (m.z - p.z) * 0.6;
+      if (m.hp <= 0) {
+        addChat(`Obstáculo '${m.name}' superado! (+Pontos Defesa)`);
+        gameState.metrics.mobsDefeated += 1;
+        gameState.xp += 15;
+        gameState.mobs.splice(i, 1);
+        setTimeout(spawnMobs, 12000);
+        updateGradeHUD();
+      }
+      return;
+    }
+  }
+
+  const ray = getTargetRay();
+  if (ray && ray.hit && ray.hit.y > -1) {
+    const bType = ray.hit.type;
+    setBlock(ray.hit.x, ray.hit.y, ray.hit.z, null);
+    if (gameState.mode === "survival") {
+      let slot = gameState.hotbar.find(s => s.type === bType);
+      if (slot) slot.count += 1;
+      else gameState.hotbar.push({ type: bType, count: 1 });
+      gameState.metrics.resourcesMined += 1;
+      renderHotbar();
+      updateGradeHUD();
+    }
+  }
+}
+
+function handleRightClick() {
+  const slot = gameState.hotbar[gameState.selectedSlot];
+  if (!slot || BLOCK_TYPES[slot.type]?.tool) return;
+  if (gameState.mode === "survival" && slot.count <= 0) return;
+
+  const ray = getTargetRay();
+  if (ray && ray.place) {
+    const { x, y, z } = ray.place;
+    const p = gameState.player;
+    const dx = Math.abs(x - p.x), dz = Math.abs(z - p.z);
+    if (dx < 0.75 && dz < 0.75 && y === Math.floor(p.y)) {
+      p.y = y + 0.55;
+    }
+    setBlock(x, y, z, slot.type);
+    registerBlockPlacement(x, y, z, slot.type);
+    if (gameState.mode === "survival") {
+      slot.count -= 1;
+      renderHotbar();
+    }
+    updateGradeHUD();
+  }
+}
+
+// ============================================================================
+// 8. CONTROLES DE TECLADO E MOUSE
+// ============================================================================
+window.addEventListener("keydown", (e) => {
+  if (!gameState.started) return;
+
+  if (consoleOpen) {
+    if (e.key === "Enter") {
+      const inp = document.getElementById("console-input");
+      if (inp.value.trim()) executeCommand(inp.value);
+      inp.value = "";
+      consoleOpen = false;
+      document.getElementById("console-box").classList.add("hidden");
+      canvas.requestPointerLock?.();
+    } else if (e.key === "Escape") {
+      consoleOpen = false;
+      document.getElementById("console-box").classList.add("hidden");
+    }
+    return;
+  }
+
+  if (e.key === "/" || e.key === "t" || e.key === "T") {
+    e.preventDefault();
+    consoleOpen = true;
+    document.getElementById("console-box").classList.remove("hidden");
+    document.exitPointerLock?.();
+    const inp = document.getElementById("console-input");
+    inp.value = e.key === "/" ? "/" : "";
+    inp.focus();
+    return;
+  }
+
+  if (e.key === "e" || e.key === "E") {
+    toggleInventory();
+    return;
+  }
+
+  if (e.key >= "1" && e.key <= "9") {
+    const idx = parseInt(e.key) - 1;
+    if (idx < gameState.hotbar.length) {
+      gameState.selectedSlot = idx;
+      renderHotbar();
+    }
+  }
+
+  if (e.key === "q" || e.key === "Q") {
+    handleRightClick();
+  }
+
+  keys[e.code] = true;
+});
+
+window.addEventListener("keyup", (e) => { keys[e.code] = false; });
+
+window.addEventListener("mousemove", (e) => {
+  if (document.pointerLockElement === canvas) {
+    gameState.player.yaw += e.movementX * 0.0025;
+    gameState.player.pitch = Math.max(-1.35, Math.min(1.35, gameState.player.pitch - e.movementY * 0.0025));
+  }
+});
+
+canvas.addEventListener("mousedown", (e) => {
+  if (!gameState.started || invOpen || consoleOpen) return;
+  if (document.pointerLockElement !== canvas) {
+    canvas.requestPointerLock?.();
+    return;
+  }
+  if (e.button === 0) handleLeftClick();
+  if (e.button === 2) handleRightClick();
+});
+window.addEventListener("contextmenu", e => e.preventDefault());
+
+// ============================================================================
+// 9. RENDERIZAÇÃO 3D VERDADEIRA EM PERSPECTIVA (FACES TOPO + LATERAIS 1x1x1)
+// ============================================================================
+function projectPoint(wx, wy, wz) {
+  const p = gameState.player;
+  const dx = wx - p.x;
+  const dy = wy - (p.y + 1.62); // Altura dos olhos do jogador
+  const dz = wz - p.z;
+
+  const cy = Math.cos(-p.yaw), sy = Math.sin(-p.yaw);
+  const rx = dx * cy - dz * sy;
+  const rz1 = dx * sy + dz * cy;
+
+  const cp = Math.cos(-p.pitch), sp = Math.sin(-p.pitch);
+  const ry = dy * cp - rz1 * sp;
+  const rz = dy * sp + rz1 * cp;
+
+  if (rz <= 0.12) return null;
+  const fov = Math.min(canvas.width, canvas.height) * 0.85;
+  return {
+    x: canvas.width / 2 + (rx / rz) * fov,
+    y: canvas.height / 2 - (ry / rz) * fov,
+    z: rz
+  };
+}
+
+function drawQuad(pts, fillStyle, strokeStyle) {
+  if (!pts[0] || !pts[1] || !pts[2] || !pts[3]) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  ctx.lineTo(pts[1].x, pts[1].y);
+  ctx.lineTo(pts[2].x, pts[2].y);
+  ctx.lineTo(pts[3].x, pts[3].y);
+  ctx.closePath();
+  ctx.fillStyle = fillStyle;
+  ctx.fill();
+  if (strokeStyle) {
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+}
+
+function drawVoxelCube(bx, by, bz, type, isTarget) {
+  const p = gameState.player;
+  const info = BLOCK_TYPES[type] || BLOCK_TYPES.stone;
+
+  // Vértices exatos de um cubo unitário [bx-0.5, bx+0.5] x [by-0.5, by+0.5] x [bz-0.5, bz+0.5]
+  const x0 = bx - 0.5, x1 = bx + 0.5;
+  const y0 = by - 0.5, y1 = by + 0.5;
+  const z0 = bz - 0.5, z1 = bz + 0.5;
+
+  const stroke = isTarget ? "#ffffff" : "rgba(0,0,0,0.28)";
+
+  // 1. Face Superior (Topo) — visível se o olho está acima de y1 e não há bloco imediatamente acima
+  if ((p.y + 1.62) > y1 && !getBlock(bx, by + 1, bz)) {
+    const p00 = projectPoint(x0, y1, z0);
+    const p10 = projectPoint(x1, y1, z0);
+    const p11 = projectPoint(x1, y1, z1);
+    const p01 = projectPoint(x0, y1, z1);
+    drawQuad([p00, p10, p11, p01], info.top, stroke);
+  }
+
+  // 2. Face Norte (-Z)
+  if (p.z < z0 && !getBlock(bx, by, bz - 1)) {
+    const p00 = projectPoint(x0, y0, z0);
+    const p10 = projectPoint(x1, y0, z0);
+    const p11 = projectPoint(x1, y1, z0);
+    const p01 = projectPoint(x0, y1, z0);
+    drawQuad([p00, p10, p11, p01], info.color, stroke);
+  }
+
+  // 3. Face Sul (+Z)
+  if (p.z > z1 && !getBlock(bx, by, bz + 1)) {
+    const p00 = projectPoint(x0, y0, z1);
+    const p10 = projectPoint(x1, y0, z1);
+    const p11 = projectPoint(x1, y1, z1);
+    const p01 = projectPoint(x0, y1, z1);
+    drawQuad([p00, p10, p11, p01], info.color, stroke);
+  }
+
+  // 4. Face Oeste (-X)
+  if (p.x < x0 && !getBlock(bx - 1, by, bz)) {
+    const p00 = projectPoint(x0, y0, z0);
+    const p01 = projectPoint(x0, y0, z1);
+    const p11 = projectPoint(x0, y1, z1);
+    const p10 = projectPoint(x0, y1, z0);
+    drawQuad([p00, p01, p11, p10], info.side, stroke);
+  }
+
+  // 5. Face Leste (+X)
+  if (p.x > x1 && !getBlock(bx + 1, by, bz)) {
+    const p00 = projectPoint(x1, y0, z0);
+    const p01 = projectPoint(x1, y0, z1);
+    const p11 = projectPoint(x1, y1, z1);
+    const p10 = projectPoint(x1, y1, z0);
+    drawQuad([p00, p01, p11, p10], info.side, stroke);
+  }
+}
+
+function updatePhysics(dt) {
+  const p = gameState.player;
+  const speed = (keys["ShiftLeft"] ? 7.8 : 5.0) * dt;
+  const sin = Math.sin(p.yaw), cos = Math.cos(p.yaw);
+
+  let mx = 0, mz = 0;
+  if (keys["KeyW"]) { mx += sin; mz += cos; }
+  if (keys["KeyS"]) { mx -= sin; mz -= cos; }
+  if (keys["KeyA"]) { mx -= cos; mz += sin; }
+  if (keys["KeyD"]) { mx += cos; mz -= sin; }
+
+  const len = Math.hypot(mx, mz);
+  if (len > 0) {
+    p.x += (mx / len) * speed;
+    p.z += (mz / len) * speed;
+  }
+
+  p.x = Math.max(-21, Math.min(21, p.x));
+  p.z = Math.max(-21, Math.min(21, p.z));
+
+  p.vy -= 18 * dt;
+  if (keys["Space"] && p.onGround) {
+    p.vy = 7.4;
+    p.onGround = false;
+  }
+  p.y += p.vy * dt;
+
+  let groundY = -1;
+  for (let checkY = Math.floor(p.y + 1); checkY >= -1; checkY--) {
+    if (getBlock(Math.round(p.x), checkY, Math.round(p.z))) {
+      groundY = checkY + 0.5;
+      break;
+    }
+  }
+  if (p.y <= groundY) {
+    p.y = groundY;
+    p.vy = 0;
+    p.onGround = true;
+  }
+
+  gameState.timeOfDay = (gameState.timeOfDay + dt * 0.008) % 1;
+  const isNight = gameState.timeOfDay > 0.6;
+  document.getElementById("f3-time").textContent = isNight ? "Noite (Mobs Ativos)" : "Dia";
+
+  document.getElementById("f3-xyz").textContent = `${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
+  const curZone = ZONES.find(zn => Math.hypot(p.x - zn.x, p.z - zn.z) <= zn.r);
+  document.getElementById("f3-zone").textContent = curZone ? curZone.name : "Área Livre";
+
+  gameState.mobs.forEach(m => {
+    const dist = Math.hypot(p.x - m.x, p.z - m.z);
+    if (dist > 1.4 && dist < 18) {
+      m.x += ((p.x - m.x) / dist) * dt * (isNight ? 2.1 : 1.1);
+      m.z += ((p.z - m.z) / dist) * dt * (isNight ? 2.1 : 1.1);
+    }
+  });
+}
+
+function renderScene() {
+  const isNight = gameState.timeOfDay > 0.6;
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  if (isNight) {
+    grad.addColorStop(0, "#090d16");
+    grad.addColorStop(1, "#1b263b");
+  } else {
+    grad.addColorStop(0, "#4ea8de");
+    grad.addColorStop(1, "#bde0fe");
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const p = gameState.player;
+  const targetRay = getTargetRay();
+  const hitKey = targetRay && targetRay.hit ? `${targetRay.hit.x},${targetRay.hit.y},${targetRay.hit.z}` : "";
+
+  const renderList = [];
+  const R = 16;
+
+  for (const [key, type] of Object.entries(gameState.worldBlocks)) {
+    const [bx, by, bz] = key.split(",").map(Number);
+    // Oculta blocos totalmente enterrados para manter 60 FPS
+    if (
+      getBlock(bx, by + 1, bz) &&
+      getBlock(bx, by - 1, bz) &&
+      getBlock(bx + 1, by, bz) &&
+      getBlock(bx - 1, by, bz) &&
+      getBlock(bx, by, bz + 1) &&
+      getBlock(bx, by, bz - 1)
+    ) continue;
+
+    const dx = bx - p.x;
+    const dy = by - (p.y + 1.0);
+    const dz = bz - p.z;
+    const distSq = dx * dx + dy * dy + dz * dz;
+    if (distSq > R * R) continue;
+
+    const centerProj = projectPoint(bx, by, bz);
+    if (centerProj && centerProj.z < R + 2) {
+      renderList.push({
+        kind: "block",
+        key,
+        x: bx,
+        y: by,
+        z: bz,
+        type,
+        dist: distSq
+      });
+    }
+  }
+
+  ZONES.forEach(zn => {
+    const proj = projectPoint(zn.x, 1.5, zn.z);
+    if (proj) {
+      const d = (zn.x - p.x) ** 2 + (zn.z - p.z) ** 2;
+      renderList.push({ kind: "beacon", zone: zn, proj, dist: d });
+    }
+  });
+
+  gameState.mobs.forEach(m => {
+    const proj = projectPoint(m.x, m.y + 0.5, m.z);
+    if (proj) {
+      const d = (m.x - p.x) ** 2 + (m.z - p.z) ** 2;
+      renderList.push({ kind: "mob", mob: m, proj, dist: d });
+    }
+  });
+
+  // Painter's Algorithm: desenha do mais distante para o mais próximo
+  renderList.sort((a, b) => b.dist - a.dist);
+
+  for (const item of renderList) {
+    if (item.kind === "block") {
+      drawVoxelCube(item.x, item.y, item.z, item.type, item.key === hitKey);
+    } else if (item.kind === "beacon") {
+      const zn = item.zone;
+      const base = projectPoint(zn.x, 0.5, zn.z);
+      const top = projectPoint(zn.x, 6.5, zn.z);
+      if (base && top) {
+        const w = Math.max(8, 220 / base.z);
+        ctx.save();
+        ctx.globalAlpha = 0.32;
+        ctx.fillStyle = zn.color;
+        ctx.fillRect(base.x - w / 2, top.y, w, base.y - top.y);
+        ctx.globalAlpha = 0.95;
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.fillText(zn.name, base.x, base.y - 24);
+        ctx.restore();
+      }
+    } else if (item.kind === "mob") {
+      const m = item.mob;
+      const fov = Math.min(canvas.width, canvas.height) * 0.85;
+      const scale = fov / item.proj.z;
+      const w = scale * 0.65, h = scale * 1.4;
+      ctx.fillStyle = m.color;
+      ctx.fillRect(item.proj.x - w / 2, item.proj.y - h / 2, w, h);
+      ctx.strokeStyle = "#fff";
+      ctx.strokeRect(item.proj.x - w / 2, item.proj.y - h / 2, w, h);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(`${m.name} (${m.hp}♥)`, item.proj.x, item.proj.y - h / 2 - 6);
+    }
+  }
+
+  // Mão do jogador no canto inferior direito
+  const slot = gameState.hotbar[gameState.selectedSlot];
+  if (slot) {
+    const info = BLOCK_TYPES[slot.type];
+    ctx.fillStyle = info.color;
+    ctx.fillRect(canvas.width - 120, canvas.height - 120, 75, 75);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(canvas.width - 120, canvas.height - 120, 75, 75);
+    ctx.font = "30px sans-serif";
+    ctx.fillText(info.icon, canvas.width - 98, canvas.height - 72);
+  }
+}
+
+let lastTime = performance.now();
+function gameLoop(now) {
+  if (!gameState.started) return;
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  if (!invOpen && !consoleOpen) {
+    updatePhysics(dt);
+  }
+  renderScene();
+  requestAnimationFrame(gameLoop);
+}
+
+// ============================================================================
+// 10. PAINEL DO PROFESSOR E EXPORTAÇÃO CSV
+// ============================================================================
+let cachedRecords = [];
+
+async function openTeacherModal() {
+  document.getElementById("teacher-modal").classList.remove("hidden");
+  await loadTeacherRecords();
+}
+
+function closeTeacherModal() {
+  document.getElementById("teacher-modal").classList.add("hidden");
+}
+
+async function loadTeacherRecords() {
+  const tbody = document.getElementById("teacher-table-body");
+  tbody.innerHTML = "<tr><td colspan='8'>Carregando registros...</td></tr>";
+
+  const map = JSON.parse(localStorage.getItem("seliga_records") || "{}");
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection("avaliacoes_seliga").get();
+      snap.forEach(doc => { map[doc.id] = doc.data(); });
+    } catch (e) {
+      console.warn("Lendo apenas cache local:", e);
+    }
+  }
+
+  cachedRecords = Object.values(map);
+  if (cachedRecords.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='8'>Nenhum aluno registrou atividade ainda neste dispositivo ou Firebase.</td></tr>";
+    return;
+  }
+
+  tbody.innerHTML = "";
+  cachedRecords.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${r.name || "-"}</b></td>
+      <td>${r.email || "-"}</td>
+      <td>${r.team || "-"}</td>
+      <td>${Number(r.ax1 || 0).toFixed(1)}</td>
+      <td>${Number(r.ax2 || 0).toFixed(1)}</td>
+      <td>${Number(r.ax3 || 0).toFixed(1)}</td>
+      <td>${Number(r.ax4 || 0).toFixed(1)}</td>
+      <td style="color:#ffd166; font-weight:bold;">${Number(r.totalGrade || 0).toFixed(1)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportGradesCSV() {
+  if (cachedRecords.length === 0) {
+    alert("Não há notas registradas para exportar.");
+    return;
+  }
+  const header = "Aluno;Email_Escola;Turma;Cidadania_ECA_3.0;Crafting_2.5;Comandos_Codigo_2.5;Defesa_Engajamento_2.0;Nota_Final_10.0;Atualizado_Em
+";
+  const rows = cachedRecords.map(r => [
+    r.name,
+    r.email,
+    r.team,
+    String(r.ax1 || 0).replace(".", ","),
+    String(r.ax2 || 0).replace(".", ","),
+    String(r.ax3 || 0).replace(".", ","),
+    String(r.ax4 || 0).replace(".", ","),
+    String(r.totalGrade || 0).replace(".", ","),
+    r.updatedAt || ""
+  ].join(";")).join("
+");
+
+  const blob = new Blob(["﻿" + header + rows], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "notas_seliga_voxelengine.csv";
+  a.click();
+}
+</script>
+</body>
+</html>
