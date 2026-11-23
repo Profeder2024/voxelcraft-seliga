@@ -326,12 +326,12 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     transform: translate(-50%, -50%);
     pointer-events: none;
     mix-blend-mode: difference;
-    transition: transform 0.1s ease;
+    transition: transform 0.08s ease;
   }
 
   #crosshair::before, #crosshair::after {
@@ -341,9 +341,9 @@
     border-radius: 1px;
   }
 
-  #crosshair::before { top: 10px; left: 2px; width: 18px; height: 2px; }
-  #crosshair::after  { left: 10px; top: 2px; width: 2px; height: 18px; }
-  #crosshair.target-active { transform: translate(-50%, -50%) scale(1.22); }
+  #crosshair::before { top: 11px; left: 2px; width: 20px; height: 2px; }
+  #crosshair::after  { left: 11px; top: 2px; width: 2px; height: 20px; }
+  #crosshair.target-active { transform: translate(-50%, -50%) scale(1.25); }
 
   /* Painel Superior Esquerdo: Nota e Avaliação */
   #grade-hud {
@@ -453,6 +453,7 @@
     padding: 14px 16px;
     width: 285px;
     font-size: 12px;
+    pointer-events: auto;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   }
 
@@ -521,6 +522,8 @@
     flex-direction: column;
     align-items: center;
     gap: 7px;
+    pointer-events: auto;
+    z-index: 25;
   }
 
   .bars-row {
@@ -530,17 +533,19 @@
     width: 556px;
     font-size: 13px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
   }
 
   #hotbar {
     display: flex;
     gap: 5px;
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(15, 23, 42, 0.92);
     backdrop-filter: blur(8px);
     padding: 6px;
     border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.35);
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.75);
+    pointer-events: auto;
   }
 
   .slot {
@@ -556,14 +561,19 @@
     position: relative;
     font-size: 10px;
     text-align: center;
+    cursor: pointer;
     transition: all 0.12s ease;
+  }
+
+  .slot:hover {
+    border-color: rgba(56, 189, 248, 0.7);
   }
 
   .slot.active {
     border: 2px solid #ffffff;
-    background: rgba(56, 189, 248, 0.25);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35);
+    background: rgba(56, 189, 248, 0.32);
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.45);
   }
 
   .slot-key {
@@ -810,7 +820,6 @@
     </div>
 
     <div class="grid-2">
-      <!-- Bloco 1: Identificação do Aluno -->
       <div class="box">
         <div>
           <div class="box-title">
@@ -836,7 +845,6 @@
         </div>
       </div>
 
-      <!-- Bloco 2: Mundo & Área do Professor -->
       <div class="box">
         <div>
           <div class="box-title">
@@ -879,7 +887,6 @@
 <div id="hud" class="hidden">
   <div id="crosshair"></div>
 
-  <!-- Painel Superior Esquerdo: Nota ao Vivo & Atalhos -->
   <div id="grade-hud">
     <div class="grade-header">
       <span class="grade-title">Avaliação Se Liga</span>
@@ -913,7 +920,6 @@
     </div>
   </div>
 
-  <!-- Painel Superior Direito: Checklist ECA & Colegas Online -->
   <div id="eca-hud">
     <h4>Direitos da Equipe (CF/88)</h4>
     <div class="eca-item"><span>📘 Educação (Escola Norte)</span><span class="eca-badge" id="st-edu">0/4</span></div>
@@ -926,13 +932,12 @@
     </div>
 
     <div style="margin-top:8px; font-size:10.5px; color:#cbd5e1; line-height:1.4;">
-      <b>WASD</b> mover • <b>Espaço</b> pular • <b>Esq.</b> minerar • <b>Dir./Q</b> construir • <b>E</b> crafting • <b>/</b> comandos • <b>P</b> professor
+      <b>WASD</b> mover • <b>Espaço</b> pular • <b>Esq.</b> minerar • <b>Dir./Q</b> construir • <b>1–0 / Scroll</b> trocar item • <b>E</b> crafting • <b>/</b> comandos
     </div>
   </div>
 
-  <!-- F3 Debug -->
   <div id="f3-panel">
-    VoxelCraft Studio 2.2 HD<br>
+    VoxelCraft Studio 2.3 HD<br>
     XYZ: <span id="f3-xyz">0, 0, 0</span> | Zona: <span id="f3-zone">Centro</span><br>
     Modo: <span id="f3-mode">SURVIVAL</span> | Hora: <span id="f3-time">Dia</span><br>
     Sync: <span id="f3-sync">Aguardando...</span>
@@ -940,12 +945,10 @@
 
   <div id="chat-log"></div>
 
-  <!-- Console de Comandos (/) -->
   <div id="console-box" class="hidden">
     <input type="text" id="console-input" placeholder="Comando (ex: /fill 3 2 3 oak_planks | /tp 0 4 -14 | /give torch 8 | /time set day)">
   </div>
 
-  <!-- Minimapa / Radar da Equipe (Canto Inferior Direito) -->
   <div id="minimap-box" style="position:fixed; bottom:16px; right:16px; background:rgba(9,14,26,0.88); backdrop-filter:blur(8px); border:1px solid rgba(56,189,248,0.45); border-radius:14px; padding:10px; z-index:20; pointer-events:auto; box-shadow:0 12px 30px rgba(0,0,0,0.65); text-align:center;">
     <div style="font-size:10px; font-weight:800; color:#38bdf8; letter-spacing:0.6px; text-transform:uppercase; margin-bottom:6px;">
       🗺️ Mapa da Sala & Equipe
@@ -956,7 +959,6 @@
     </div>
   </div>
 
-  <!-- Barra Inferior (Vida, Fome, Hotbar) -->
   <div id="bottom-hud">
     <div class="bars-row">
       <span id="hearts-display">❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️</span>
@@ -1006,7 +1008,7 @@
 </div>
 
 <!-- ==========================================================================
-     MODAL ÁREA DO PROFESSOR (ACESSO DIRETO, KPIs, FILTROS & CSV)
+     MODAL ÁREA DO PROFESSOR
      ========================================================================== -->
 <div id="teacher-modal" class="hidden">
   <div class="card" style="max-width:960px;">
@@ -1020,7 +1022,6 @@
       <button class="btn btn-secondary btn-sm" onclick="closeTeacherModal()">✕ Fechar</button>
     </div>
 
-    <!-- Indicadores Resumidos (KPIs) -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-label">Alunos Avaliados</div>
@@ -1042,7 +1043,6 @@
 
     <div id="teacher-warn-area"></div>
 
-    <!-- Barra de Busca e Filtro por Equipe -->
     <div class="filter-bar">
       <input type="text" id="teacher-search" placeholder="🔍 Filtrar por nome do aluno ou e-mail @escola..." oninput="renderTeacherTable()">
       <select id="teacher-team-filter" onchange="renderTeacherTable()">
@@ -1084,7 +1084,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- ==========================================================================
      MODAL DE SENHA DA ÁREA DO PROFESSOR
@@ -1363,7 +1362,7 @@ let gameState = {
     { type: "mon_esp", count: 16 },
     { type: "mon_laz", count: 16 }
   ],
-  selectedSlot: 0,
+  selectedSlot: 2,
   hp: 20,
   hunger: 20,
   xp: 0,
@@ -1372,7 +1371,7 @@ let gameState = {
   walkBob: 0,
   particles: [],
   clouds: [],
-  player: { x: 0, y: 1.5, z: 0, vx: 0, vy: 0, vz: 0, yaw: 0, pitch: -0.22, onGround: false },
+  player: { x: 0, y: 0.5, z: 0, vx: 0, vy: 0, vz: 0, yaw: 0, pitch: -0.25, onGround: false },
   mobs: [],
   metrics: {
     zoneBlocksPlaced: 0,
@@ -1392,7 +1391,7 @@ let gameState = {
 for (let i = 0; i < 14; i++) {
   gameState.clouds.push({
     x: (Math.random() - 0.5) * 90,
-    y: 16 + Math.random() * 4,
+    y: 18 + Math.random() * 4,
     z: (Math.random() - 0.5) * 90,
     w: 5 + Math.random() * 6,
     d: 4 + Math.random() * 5
@@ -1455,7 +1454,7 @@ function updateGradeHUD() {
 }
 
 // ============================================================================
-// 4. SINCRONIZAÇÃO MULTIPLAYER DA EQUIPE EM TEMPO REAL (FIRESTORE + LOCAL BRIDGE)
+// 4. SINCRONIZAÇÃO MULTIPLAYER DA EQUIPE EM TEMPO REAL
 // ============================================================================
 let unsubRoom = null;
 let teamChannel = null;
@@ -1467,14 +1466,14 @@ async function ensureFirebaseAuth() {
     try {
       await auth.signInAnonymously();
     } catch (e) {
-      console.warn("Auth anônima indisponível (usando modo aberto/local):", e.message);
+      console.warn("Auth anônima indisponível:", e.message);
     }
   }
 }
 
 function sanitizeTeamId(raw) {
   return (raw || "EQUIPE-GERAL")
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .trim().toUpperCase().replace(/[^A-Z0-9]+/g, "_");
 }
 
@@ -1500,7 +1499,7 @@ function updateTeammatesHUD() {
     ).join(", ");
     box.innerHTML = `👥 Na sala (${entries.length + 1}): Você, ${links}<br><span style="font-size:10px; color:#a7f3d0;">💡 Clique no nome acima para ir até o colega!</span>`;
   } else {
-    box.innerHTML = `👥 Sala <b>${gameState.teamId}</b>: aguardando colegas...<br><span style="font-size:10px; color:#94a3b8;">Peça para usarem exatamente o código <b>${gameState.studentTeam}</b></span>`;
+    box.innerHTML = `👥 Sala <b>${gameState.teamId}</b>: aguardando colegas...<br><span style="font-size:10px; color:#94a3b8;">Código: <b>${gameState.studentTeam}</b></span>`;
   }
 }
 
@@ -1516,7 +1515,6 @@ function teleportToTeammate(key) {
 
 function applyIncomingRoomData(data) {
   if (!data) return;
-  // Compatibilidade com chaves aninhadas e chaves literais com ponto
   const incomingEdits = { ...(data.edits || {}) };
   const incomingPlayers = { ...(data.players || {}) };
   for (const [k, v] of Object.entries(data)) {
@@ -1548,8 +1546,6 @@ function applyIncomingRoomData(data) {
 
 function startTeamRealtimeSync() {
   if (!gameState.teamId) return;
-
-  // 1. Canal instantâneo entre abas/janelas do mesmo navegador (0ms de latência)
   try {
     if (teamChannel) teamChannel.close();
     teamChannel = new BroadcastChannel("seliga_room_" + gameState.teamId);
@@ -1560,7 +1556,6 @@ function startTeamRealtimeSync() {
     };
   } catch (e) {}
 
-  // 2. Listener em tempo real no Firestore (entre computadores diferentes)
   if (firebaseReady && db) {
     const roomRef = db.collection("salas_equipes_seliga").doc(gameState.teamId);
     unsubRoom = roomRef.onSnapshot((doc) => {
@@ -1569,8 +1564,7 @@ function startTeamRealtimeSync() {
         document.getElementById("f3-sync").textContent = "Nuvem Conectada (" + gameState.teamId + ")";
       }
     }, (err) => {
-      console.warn("Listener sala Firestore:", err);
-      document.getElementById("f3-sync").textContent = "Sync Local (Verifique regras Firestore)";
+      document.getElementById("f3-sync").textContent = "Sync Local";
     });
   }
 }
@@ -1625,13 +1619,12 @@ async function flushTeamUpdates() {
   }
   pendingBlockUpdates = {};
 
-  // Envia instantaneamente para outras abas locais
   if (teamChannel) {
     try {
       teamChannel.postMessage({
         type: "ROOM_SYNC",
         payload: {
-          players: { [safeEmailKey]: updateObj[`players.${safeEmailKey}`] },
+          players: { [safeEmailKey]: playerPayload },
           edits: gameState.teamEdits
         }
       });
@@ -1874,7 +1867,7 @@ function startGame() {
 
   SoundFX.init();
   SoundFX.craft();
-  addChat(`Bem-vindo(a), ${name}! Conectado à sala '${gameState.studentTeam}'.`);
+  addChat(`Bem-vindo(a), ${name}! Use 1–0 ou Scroll para trocar blocos, Esq. para minerar, Dir./Q para construir.`);
   try {
     canvas.requestPointerLock?.();
   } catch (err) {}
@@ -1941,8 +1934,16 @@ function addChat(msg) {
   if (log.children.length > 5) log.removeChild(log.firstChild);
 }
 
+function selectHotbarSlot(idx) {
+  if (idx >= 0 && idx < gameState.hotbar.length) {
+    gameState.selectedSlot = idx;
+    renderHotbar();
+  }
+}
+
 function renderHotbar() {
   const hb = document.getElementById("hotbar");
+  if (!hb) return;
   hb.innerHTML = "";
   gameState.hotbar.forEach((slot, idx) => {
     const info = BLOCK_TYPES[slot.type] || { name: slot.type, icon: "📦" };
@@ -1954,8 +1955,10 @@ function renderHotbar() {
       <span style="font-size:9px; color:#e2e8f0; font-weight:600;">${info.name.slice(0, 8)}</span>
       <span class="slot-count">${gameState.mode === "creative" ? "∞" : slot.count}</span>
     `;
-    div.style.cursor = "pointer";
-    div.onclick = () => { gameState.selectedSlot = idx; renderHotbar(); };
+    div.onmousedown = (ev) => {
+      ev.stopPropagation();
+      selectHotbarSlot(idx);
+    };
     hb.appendChild(div);
   });
 }
@@ -2028,11 +2031,13 @@ function executeCommand(raw) {
       gameState.mode = "creative";
       document.getElementById("f3-mode").textContent = "CREATIVE";
       gameState.metrics.validCommands["gamemode"] = true;
+      renderHotbar();
       addChat("Modo alterado para Criativo!");
     } else if (m === "survival" || m === "0") {
       gameState.mode = "survival";
       document.getElementById("f3-mode").textContent = "SURVIVAL";
       gameState.metrics.validCommands["gamemode"] = true;
+      renderHotbar();
       addChat("Modo alterado para Sobrevivência!");
     }
   } else if (cmd === "/time") {
@@ -2096,7 +2101,7 @@ function executeCommand(raw) {
 }
 
 // ============================================================================
-// 7B. MOTOR DE ÁUDIO PROCEDURAL (WEB AUDIO API — SEM ARQUIVOS EXTERNOS)
+// 7B. MOTOR DE ÁUDIO PROCEDURAL
 // ============================================================================
 const SoundFX = {
   ctx: null,
@@ -2193,7 +2198,7 @@ function toggleSound() {
 }
 
 // ============================================================================
-// 8. INTERAÇÃO (MINERAR, CONSTRUIR ADJACENTE SEM BLOCOS GIGANTES NO ALTO)
+// 8. VOXEL RAYCASTER DDA PRECISO (MINERAR E CONSTRUIR EXATAMENTE NA MIRA)
 // ============================================================================
 function hasAdjacentSolidBlock(x, y, z) {
   return !!(
@@ -2210,45 +2215,87 @@ function isInsidePlayerBody(bx, by, bz) {
   const p = gameState.player;
   const dx = Math.abs(bx - p.x);
   const dz = Math.abs(bz - p.z);
-  const dyFeet = Math.abs(by - p.y);
-  const dyHead = Math.abs(by - (p.y + 1.2));
-  return dx < 0.85 && dz < 0.85 && (dyFeet < 0.85 || dyHead < 0.95);
+  const dyFeet = Math.abs(by - (p.y + 0.5));
+  const dyHead = Math.abs(by - (p.y + 1.4));
+  return dx < 0.78 && dz < 0.78 && (dyFeet < 0.78 || dyHead < 0.85);
 }
 
+// Algoritmo 3D DDA (Fast Voxel Traversal) — detecta exatamente o bloco e a face sob a mira
 function getTargetRay() {
   const p = gameState.player;
-  const eyeY = p.y + 1.62;
-  const dirX = Math.sin(p.yaw) * Math.cos(p.pitch);
-  const dirY = Math.sin(p.pitch);
-  const dirZ = Math.cos(p.yaw) * Math.cos(p.pitch);
+  const ox = p.x;
+  const oy = p.y + 1.62;
+  const oz = p.z;
 
-  let prev = null;
-  for (let d = 0.6; d <= 6.5; d += 0.08) {
-    const rx = Math.round(p.x + dirX * d);
-    const ry = Math.round(eyeY + dirY * d);
-    const rz = Math.round(p.z + dirZ * d);
-    const blk = getBlock(rx, ry, rz);
-    if (blk) {
-      const validPlace = (prev && !getBlock(prev.x, prev.y, prev.z) && !isInsidePlayerBody(prev.x, prev.y, prev.z)) ? prev : null;
-      return { hit: { x: rx, y: ry, z: rz, type: blk }, place: validPlace };
-    }
-    if (!prev || rx !== prev.x || ry !== prev.y || rz !== prev.z) {
-      prev = { x: rx, y: ry, z: rz };
-    }
-  }
+  // Vetor direção alinhado exatamente com projectPoint
+  const dx = Math.sin(p.yaw) * Math.cos(p.pitch);
+  const dy = Math.sin(p.pitch);
+  const dz = Math.cos(p.yaw) * Math.cos(p.pitch);
 
-  // Se não atingiu bloco diretamente, permite apoiar no chão próximo (máx 4 blocos à frente, encostado no solo)
-  const fx = Math.round(p.x + dirX * 3.5);
-  const fz = Math.round(p.z + dirZ * 3.5);
-  for (let checkY = Math.round(p.y + 2); checkY >= -1; checkY--) {
-    if (getBlock(fx, checkY, fz)) {
-      const py = checkY + 1;
-      if (!getBlock(fx, py, fz) && !isInsidePlayerBody(fx, py, fz) && hasAdjacentSolidBlock(fx, py, fz)) {
-        return { hit: null, place: { x: fx, y: py, z: fz } };
+  let vx = Math.round(ox);
+  let vy = Math.round(oy);
+  let vz = Math.round(oz);
+
+  const stepX = dx >= 0 ? 1 : -1;
+  const stepY = dy >= 0 ? 1 : -1;
+  const stepZ = dz >= 0 ? 1 : -1;
+
+  const tDeltaX = dx !== 0 ? Math.abs(1 / dx) : 1e9;
+  const tDeltaY = dy !== 0 ? Math.abs(1 / dy) : 1e9;
+  const tDeltaZ = dz !== 0 ? Math.abs(1 / dz) : 1e9;
+
+  // Cada voxel ocupa [v - 0.5, v + 0.5]
+  const boundX = vx + (stepX > 0 ? 0.5 : -0.5);
+  const boundY = vy + (stepY > 0 ? 0.5 : -0.5);
+  const boundZ = vz + (stepZ > 0 ? 0.5 : -0.5);
+
+  let tMaxX = dx !== 0 ? (boundX - ox) / dx : 1e9;
+  let tMaxY = dy !== 0 ? (boundY - oy) / dy : 1e9;
+  let tMaxZ = dz !== 0 ? (boundZ - oz) / dz : 1e9;
+
+  let nx = 0, ny = 0, nz = 0;
+  const maxDist = 7.5;
+
+  for (let i = 0; i < 32; i++) {
+    const blk = getBlock(vx, vy, vz);
+    if (blk && i > 0) {
+      const px = vx + nx;
+      const py = vy + ny;
+      const pz = vz + nz;
+      const canPlace = !getBlock(px, py, pz) && !isInsidePlayerBody(px, py, pz);
+      return {
+        hit: { x: vx, y: vy, z: vz, type: blk },
+        place: canPlace ? { x: px, y: py, z: pz } : null
+      };
+    }
+
+    if (tMaxX < tMaxY) {
+      if (tMaxX < tMaxZ) {
+        if (tMaxX > maxDist) break;
+        vx += stepX;
+        tMaxX += tDeltaX;
+        nx = -stepX; ny = 0; nz = 0;
+      } else {
+        if (tMaxZ > maxDist) break;
+        vz += stepZ;
+        tMaxZ += tDeltaZ;
+        nx = 0; ny = 0; nz = -stepZ;
       }
-      break;
+    } else {
+      if (tMaxY < tMaxZ) {
+        if (tMaxY > maxDist) break;
+        vy += stepY;
+        tMaxY += tDeltaY;
+        nx = 0; ny = -stepY; nz = 0;
+      } else {
+        if (tMaxZ > maxDist) break;
+        vz += stepZ;
+        tMaxZ += tDeltaZ;
+        nx = 0; ny = 0; nz = -stepZ;
+      }
     }
   }
+
   return { hit: null, place: null };
 }
 
@@ -2271,7 +2318,7 @@ function handleLeftClick() {
   const p = gameState.player;
   for (let i = gameState.mobs.length - 1; i >= 0; i--) {
     const m = gameState.mobs[i];
-    if (Math.hypot(m.x - p.x, m.z - p.z) < 3.6) {
+    if (Math.hypot(m.x - p.x, m.z - p.z) < 4.0) {
       const slot = gameState.hotbar[gameState.selectedSlot];
       SoundFX.attack();
       const dmg = (slot && slot.type === "sword") ? 2 : 1;
@@ -2318,12 +2365,11 @@ function handleRightClick() {
       addChat("Sem blocos na hotbar! Minere ou abra o Crafting (E).");
       return;
     }
-    gameState.selectedSlot = blockSlotIdx;
+    selectHotbarSlot(blockSlotIdx);
     slot = gameState.hotbar[blockSlotIdx];
-    renderHotbar();
   }
   if (gameState.mode === "survival" && slot.count <= 0) {
-    addChat("Este bloco acabou! Selecione outro slot (3 a 9) ou use o scroll do mouse.");
+    addChat("Este bloco acabou! Selecione outro slot (3 a 0) ou use o scroll do mouse.");
     return;
   }
 
@@ -2349,8 +2395,21 @@ function handleRightClick() {
 }
 
 // ============================================================================
-// 9. CONTROLES DE TECLADO E MOUSE
+// 9. CONTROLES DE TECLADO E MOUSE (MOUSE CORRIGIDO + HOTBAR 100% RESPONSIVA)
 // ============================================================================
+const DIGIT_CODE_MAP = {
+  Digit1: 0, Numpad1: 0,
+  Digit2: 1, Numpad2: 1,
+  Digit3: 2, Numpad3: 2,
+  Digit4: 3, Numpad4: 3,
+  Digit5: 4, Numpad5: 4,
+  Digit6: 5, Numpad6: 5,
+  Digit7: 6, Numpad7: 6,
+  Digit8: 7, Numpad8: 7,
+  Digit9: 8, Numpad9: 8,
+  Digit0: 9, Numpad0: 9
+};
+
 window.addEventListener("keydown", (e) => {
   if (!gameState.started) return;
 
@@ -2411,12 +2470,12 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
-  if ((e.key >= "1" && e.key <= "9") || e.key === "0") {
-    const idx = e.key === "0" ? 9 : parseInt(e.key) - 1;
-    if (idx < gameState.hotbar.length) {
-      gameState.selectedSlot = idx;
-      renderHotbar();
-    }
+  // Troca de slot da Hotbar via e.code ou e.key
+  if (e.code in DIGIT_CODE_MAP) {
+    selectHotbarSlot(DIGIT_CODE_MAP[e.code]);
+  } else if ((e.key >= "1" && e.key <= "9") || e.key === "0") {
+    const idx = e.key === "0" ? 9 : parseInt(e.key, 10) - 1;
+    selectHotbarSlot(idx);
   }
 
   if (e.key === "q" || e.key === "Q") {
@@ -2433,8 +2492,9 @@ window.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
 window.addEventListener("mousemove", (e) => {
   if (document.pointerLockElement === canvas) {
-    gameState.player.yaw += e.movementX * 0.0025;
-    gameState.player.pitch = Math.max(-1.35, Math.min(1.35, gameState.player.pitch - e.movementY * 0.0025));
+    gameState.player.yaw += e.movementX * 0.0024;
+    // Sinal corrigido: mover mouse para cima aumenta pitch (olha para cima)
+    gameState.player.pitch = Math.max(-1.35, Math.min(1.35, gameState.player.pitch + e.movementY * 0.0024));
   }
 });
 
@@ -2451,16 +2511,16 @@ window.addEventListener("contextmenu", e => e.preventDefault());
 window.addEventListener("wheel", (e) => {
   if (!gameState.started || gameState.paused || invOpen || consoleOpen) return;
   const dir = e.deltaY > 0 ? 1 : -1;
-  gameState.selectedSlot = (gameState.selectedSlot + dir + gameState.hotbar.length) % gameState.hotbar.length;
-  renderHotbar();
-});
+  const next = (gameState.selectedSlot + dir + gameState.hotbar.length) % gameState.hotbar.length;
+  selectHotbarSlot(next);
+}, { passive: true });
 
 // ============================================================================
-// 10. RENDERIZAÇÃO 3D TEXTURIZADA EM PERSPECTIVA + AVATARES DOS COLEGAS
+// 10. RENDERIZAÇÃO 3D TEXTURIZADA EM PERSPECTIVA + PREVIEW DE CONSTRUÇÃO
 // ============================================================================
 function projectPoint(wx, wy, wz) {
   const p = gameState.player;
-  const bobY = Math.sin(gameState.walkBob) * 0.045;
+  const bobY = Math.sin(gameState.walkBob) * 0.04;
   const dx = wx - p.x;
   const dy = wy - (p.y + 1.62 + bobY);
   const dz = wz - p.z;
@@ -2469,18 +2529,51 @@ function projectPoint(wx, wy, wz) {
   const rx = dx * cy - dz * sy;
   const rz1 = dx * sy + dz * cy;
 
-  const cp = Math.cos(-p.pitch), sp = Math.sin(-p.pitch);
+  // Rotação vertical consistente: pitch > 0 olha para cima, pitch < 0 olha para baixo
+  const cp = Math.cos(p.pitch), sp = Math.sin(p.pitch);
   const ry = dy * cp - rz1 * sp;
   const rz = dy * sp + rz1 * cp;
 
-  if (rz <= 0.35) return null;
-  // Proporção FOV 75° padrão do Minecraft original (1 bloco = 1m real sem zoom exagerado)
-  const fov = canvas.height * 0.56;
+  if (rz <= 0.25) return null;
+  // Escala equilibrada (FOV amplo estilo Minecraft 85°) para blocos em tamanho natural
+  const fov = canvas.height * 0.44;
   return {
     x: canvas.width / 2 + (rx / rz) * fov,
     y: canvas.height / 2 - (ry / rz) * fov,
     z: rz
   };
+}
+
+function drawPlacementGhost(bx, by, bz) {
+  const x0 = bx - 0.5, x1 = bx + 0.5;
+  const y0 = by - 0.5, y1 = by + 0.5;
+  const z0 = bz - 0.5, z1 = bz + 0.5;
+
+  const c = [
+    projectPoint(x0, y0, z0), projectPoint(x1, y0, z0),
+    projectPoint(x1, y0, z1), projectPoint(x0, y0, z1),
+    projectPoint(x0, y1, z0), projectPoint(x1, y1, z0),
+    projectPoint(x1, y1, z1), projectPoint(x0, y1, z1)
+  ];
+  if (c.some(pt => !pt)) return;
+
+  const edges = [
+    [0,1],[1,2],[2,3],[3,0],
+    [4,5],[5,6],[6,7],[7,4],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(45, 212, 191, 0.85)";
+  ctx.lineWidth = 1.6;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  for (const [a, b] of edges) {
+    ctx.moveTo(c[a].x, c[a].y);
+    ctx.lineTo(c[b].x, c[b].y);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawTexturedTriangle(tex, p0, p1, p2, u0, v0, u1, v1, u2, v2) {
@@ -2576,6 +2669,14 @@ function drawVoxelCube(bx, by, bz, type, isTarget, dist) {
     drawQuad([p00, p10, p11, p01], info.top, stroke, info.texTop, nightDim, distFog);
   }
 
+  if ((p.y + 1.62) < y0 && !getBlock(bx, by - 1, bz)) {
+    const p00 = projectPoint(x0, y0, z0);
+    const p10 = projectPoint(x1, y0, z0);
+    const p11 = projectPoint(x1, y0, z1);
+    const p01 = projectPoint(x0, y0, z1);
+    drawQuad([p00, p10, p11, p01], info.side, stroke, info.texSide, 0.35 + nightDim, distFog);
+  }
+
   if (p.z < z0 && !getBlock(bx, by, bz - 1)) {
     const p00 = projectPoint(x0, y1, z0);
     const p10 = projectPoint(x1, y1, z0);
@@ -2655,7 +2756,6 @@ function drawTeammateAvatar(tm) {
   const w = h * 0.52;
   const dist = Math.round(Math.hypot((tm.x || 0) - gameState.player.x, (tm.z || 0) - gameState.player.z));
 
-  // Feixe luminoso sutil acima do colega para localizá-lo facilmente no mapa
   if (beaconTop) {
     const bGrad = ctx.createLinearGradient(0, head.y, 0, beaconTop.y);
     bGrad.addColorStop(0, (tm.color || "#38bdf8") + "66");
@@ -2664,38 +2764,32 @@ function drawTeammateAvatar(tm) {
     ctx.fillRect(base.x - Math.max(4, w * 0.2), beaconTop.y, Math.max(8, w * 0.4), head.y - beaconTop.y);
   }
 
-  // Sombra no chão
   ctx.fillStyle = "rgba(0,0,0,0.4)";
   ctx.beginPath();
   ctx.ellipse(base.x, base.y, w * 0.7, w * 0.26, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pernas (calça azul estilo Steve)
   ctx.fillStyle = "#1d4ed8";
   ctx.fillRect(base.x - w * 0.34, head.y + h * 0.64, w * 0.31, h * 0.36);
   ctx.fillRect(base.x + w * 0.03, head.y + h * 0.64, w * 0.31, h * 0.36);
 
-  // Tronco e braços com a cor da equipe
   ctx.fillStyle = tm.color || "#38bdf8";
   ctx.fillRect(base.x - w * 0.55, head.y + h * 0.32, w * 1.1, h * 0.34);
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.4;
   ctx.strokeRect(base.x - w * 0.36, head.y + h * 0.32, w * 0.72, h * 0.34);
 
-  // Cabeça
   const headSize = w * 0.86;
   ctx.fillStyle = "#f1c27d";
   ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize);
   ctx.strokeRect(base.x - headSize / 2, head.y, headSize, headSize);
 
-  // Cabelo e olhos
   ctx.fillStyle = "#3f2e21";
   ctx.fillRect(base.x - headSize / 2, head.y, headSize, headSize * 0.24);
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(base.x - headSize * 0.28, head.y + headSize * 0.42, headSize * 0.18, headSize * 0.16);
   ctx.fillRect(base.x + headSize * 0.10, head.y + headSize * 0.42, headSize * 0.18, headSize * 0.16);
 
-  // Nametag destacada com distância
   const label = `${(tm.name || "Colega").split(" ")[0]} (${dist}m)`;
   ctx.fillStyle = "rgba(9, 14, 26, 0.88)";
   ctx.strokeStyle = tm.color || "#38bdf8";
@@ -2969,7 +3063,7 @@ function renderScene() {
       const base = projectPoint(zn.x, 0.5, zn.z);
       const top = projectPoint(zn.x, 7.5, zn.z);
       if (base && top) {
-        const w = Math.max(10, 240 / base.z);
+        const w = Math.max(10, 200 / base.z);
         ctx.save();
         const bGrad = ctx.createLinearGradient(0, base.y, 0, top.y);
         bGrad.addColorStop(0, zn.color + "88");
@@ -2992,10 +3086,15 @@ function renderScene() {
     }
   }
 
+  // Pré-visualização (ghost wireframe) exatamente onde o próximo bloco será construído
+  if (targetRay && targetRay.place) {
+    drawPlacementGhost(targetRay.place.x, targetRay.place.y, targetRay.place.z);
+  }
+
   gameState.particles.forEach(pt => {
     const pr = projectPoint(pt.x, pt.y, pt.z);
     if (pr) {
-      const sz = Math.max(3, 95 / pr.z);
+      const sz = Math.max(3, 85 / pr.z);
       ctx.fillStyle = pt.color;
       ctx.fillRect(pr.x - sz / 2, pr.y - sz / 2, sz, sz);
     }
@@ -3004,7 +3103,6 @@ function renderScene() {
   drawFirstPersonHand();
   renderMinimap();
 
-  // Indicador direcional na tela para colegas fora do campo de visão
   Object.values(gameState.teammates).forEach(tm => {
     const dx = (tm.x || 0) - p.x;
     const dz = (tm.z || 0) - p.z;
@@ -3054,7 +3152,6 @@ if (minimapCanvas) {
     const rect = minimapCanvas.getBoundingClientRect();
     const cx = e.clientX - rect.left;
     const cy = e.clientY - rect.top;
-    // Converte coordenada 0..164 para mundo -36..+36
     const wx = ((cx / 164) * 72) - 36;
     const wz = ((cy / 164) * 72) - 36;
     gameState.player.x = Math.max(-35, Math.min(35, wx));
@@ -3071,11 +3168,9 @@ function renderMinimap() {
   const toMapX = (wx) => ((wx + 36) / 72) * W;
   const toMapY = (wz) => ((wz + 36) / 72) * H;
 
-  // Fundo gramado
   mCtx.fillStyle = "#2d5a27";
   mCtx.fillRect(0, 0, W, H);
 
-  // Estradas de pedra e Praça Central
   mCtx.fillStyle = "#64748b";
   const cx = toMapX(0), cy = toMapY(0);
   mCtx.fillRect(cx - 3, toMapY(-22), 6, toMapY(22) - toMapY(-22));
@@ -3084,7 +3179,6 @@ function renderMinimap() {
   mCtx.arc(cx, cy, (9 / 72) * W, 0, Math.PI * 2);
   mCtx.fill();
 
-  // Blocos construídos pelos jogadores (edits)
   for (const [key, type] of Object.entries(gameState.teamEdits)) {
     if (!type || type === "AIR") continue;
     const [bx, , bz] = key.split(",").map(Number);
@@ -3093,7 +3187,6 @@ function renderMinimap() {
     mCtx.fillRect(toMapX(bx) - 1.5, toMapY(bz) - 1.5, 3, 3);
   }
 
-  // 4 Zonas do ECA
   ZONES.forEach(zn => {
     const zx = toMapX(zn.x), zy = toMapY(zn.z);
     mCtx.fillStyle = zn.color + "55";
@@ -3110,7 +3203,6 @@ function renderMinimap() {
     mCtx.fillText(zn.id.toUpperCase(), zx, zy + 3);
   });
 
-  // Colegas da Equipe (pontos destacados com nome)
   Object.values(gameState.teammates).forEach(tm => {
     const tx = toMapX(tm.x || 0);
     const ty = toMapY(tm.z || 0);
@@ -3128,7 +3220,6 @@ function renderMinimap() {
     mCtx.fillText((tm.name || "Colega").split(" ")[0], tx, ty - 6);
   });
 
-  // Jogador Local (seta direcional branca)
   const px = toMapX(gameState.player.x);
   const py = toMapY(gameState.player.z);
   mCtx.save();
@@ -3238,10 +3329,9 @@ async function loadTeacherRecords() {
       const snap = await db.collection("avaliacoes_seliga").get();
       snap.forEach(doc => { map[doc.id] = doc.data(); });
     } catch (e) {
-      console.warn("Lendo cache local:", e);
       warnArea.innerHTML = `
         <div class="alert-banner">
-          <b>Modo de Leitura Local:</b> Os registros deste navegador foram carregados abaixo. Para sincronizar notas de outros computadores da sala de informática via Firebase, certifique-se de estar logado com <b>Entrar com Google (@escola)</b> ou libere a leitura pública na coleção <code>avaliacoes_seliga</code> do Firestore.
+          <b>Modo de Leitura Local:</b> Os registros deste navegador foram carregados abaixo.
         </div>
       `;
     }
@@ -3279,7 +3369,6 @@ function renderTeacherTable() {
     return matchesQuery && matchesTeam;
   });
 
-  // Atualiza KPIs
   const totalStudents = filtered.length;
   const avg = totalStudents > 0
     ? filtered.reduce((acc, r) => acc + Number(r.totalGrade || 0), 0) / totalStudents
